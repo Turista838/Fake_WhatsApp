@@ -5,11 +5,11 @@ import Data.ServerList;
 import java.net.DatagramSocket;
 import java.net.Socket;
 
-public class ProcessServerMessages extends Thread {
+public class ProcessServerMessagesUDP extends Thread {
 
     private DatagramSocket s;
 
-    public ProcessServerMessages(DatagramSocket s){
+    public ProcessServerMessagesUDP(DatagramSocket s){
         this.s = s;
     }
 

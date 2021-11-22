@@ -2,11 +2,11 @@ package UDP;
 
 import java.net.DatagramSocket;
 
-public class ProcessClientMessages extends Thread {
+public class ProcessClientMessagesUDP extends Thread {
 
     private DatagramSocket s;
 
-    public ProcessClientMessages(DatagramSocket s){
+    public ProcessClientMessagesUDP(DatagramSocket s){
         this.s = s;
     }
 

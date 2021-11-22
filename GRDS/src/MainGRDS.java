@@ -5,13 +5,11 @@ import UDP.*;
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.ServerSocket;
-import java.net.Socket;
 
 public class MainGRDS {
 
-    private ProcessClientMessages processClientMessages;
-    private ProcessServerMessages processServerMessages;
+    //private ProcessClientMessagesUDP processClientMessagesUDP;
+    //private ProcessServerMessagesUDP processServerMessagesUDP;
     private ServerList serverList;
     private static final int MAX_SIZE = 10000;
 
@@ -39,7 +37,7 @@ public class MainGRDS {
             listeningPort = Integer.parseInt(args[0]);
             socket = new DatagramSocket(listeningPort);
 
-            while(true){
+            while(true){ //TODO tirar o true
 
                 try{
                     packet = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
@@ -51,15 +49,13 @@ public class MainGRDS {
                     Object obj = oin.readObject();
 
                     if(obj instanceof GRDSClientMessageUDP){
-                        //ProcessClientMessages processClientMessages = new ProcessClientMessages(socket);
-                        System.out.println("entrei aqui ProcessClientMessages"); //TODO apagar
-                        //processClientMessages.start();
+                        ProcessClientMessagesUDP processClientMessages = new ProcessClientMessagesUDP(socket);
+                        processClientMessages.start();
                     }
                     if(obj instanceof GRDSServerMessageUDP){
                             //TODO add to server list
-                            System.out.println("entrei aqui ProcessServerMessages"); //TODO apagar
-                            //ProcessServerMessages processServerMessages = new ProcessServerMessages(socket);
-                            //processServerMessages.start();
+                            ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(socket);
+                            processServerMessages.start();
                     }
                 }
                 catch(IOException e){
