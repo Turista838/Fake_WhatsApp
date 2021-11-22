@@ -1,5 +1,5 @@
-package Model;
 import SharedClasses.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -8,35 +8,36 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-public class Client {
+public class MainServer {
 
     public static final int MAX_SIZE = 10000;
     public static final int TIMEOUT = 10; //segundos
 
-    InetAddress gbdsAddr = null;
-    String gbdsIP;
-    String gbdsPort;
+    public static void main(String[] args) {
 
-    ByteArrayOutputStream bout; //enviar
-    ObjectOutputStream oout; //enviar
+        InetAddress gbdsAddr = null;
+        String gbdsIP;
+        String gbdsPort;
 
-    ByteArrayInputStream bin; //receber
-    ObjectInputStream oin; //receber
+        ByteArrayOutputStream bout; //enviar
+        ObjectOutputStream oout; //enviar
 
-    DatagramSocket socket = null;
-    DatagramPacket packet = null;
+        ByteArrayInputStream bin; //receber
+        ObjectInputStream oin; //receber
 
-
-
-    public Client(String args0, String args1){
-        gbdsIP = args0; //IP GRDS
-        gbdsPort = args1; //Porto GRDS
-    }
+        DatagramSocket socket = null;
+        DatagramPacket packet = null;
 
 
-    public void connectSGBD(){
+        if(args.length != 2){
+            System.out.println("Arguments needed: <IP GRDS> <PORT GRDS>");
+            return;
+        }
 
-        GRDSClientMessageUDP grdsClientMessageUDP = new GRDSClientMessageUDP();
+        gbdsIP = args[0]; //IP GRDS
+        gbdsPort = args[1]; //Porto GRDS
+
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP();
 
         try{ //connectar ao SGBD
 
@@ -47,7 +48,7 @@ public class Client {
             //encapsular a mensagem
             bout = new ByteArrayOutputStream();
             oout = new ObjectOutputStream(bout);
-            oout.writeUnshared(grdsClientMessageUDP);
+            oout.writeUnshared(grdsServerMessageUDP);
             //send
             packet = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, Integer.parseInt(gbdsPort));
             socket.send(packet);
@@ -57,7 +58,7 @@ public class Client {
             //deserializar o fluxo de bytes recebido
             bin = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
             oin = new ObjectInputStream(bin);
-            grdsClientMessageUDP = (GRDSClientMessageUDP)oin.readObject();
+            grdsServerMessageUDP = (GRDSServerMessageUDP)oin.readObject();
 
 
         }catch(Exception e){
@@ -67,5 +68,6 @@ public class Client {
                 socket.close();
             }
         }
+
     }
 }
