@@ -47,7 +47,7 @@ public class TextUserInterface {
         //TODO if já estiver autenticado:
         cli.connectSGBD();
         //uiMainMenu()
-        //TODO else autenticar
+        //TODO else autenticar (autenticar só depois de estar ligado a um servidor)
         //register()
 
     }

@@ -7,7 +7,6 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Calendar;
 
 public class Client {
 
@@ -28,14 +27,16 @@ public class Client {
     DatagramSocket socket = null;
     DatagramPacket packet = null;
 
-    public Client(String args0, String args1){
+    //DirectMessageTCP a = new DirectMe
 
-        gbdsIP = args0;
-        gbdsPort = Integer.parseInt(args1);
+    public Client(String args0, String args1){
+        gbdsIP = args0; //IP GRDS
+        gbdsPort = Integer.parseInt(args1); //Porto GRDS
 
     }
 
     public void connectSGBD(){
+
 
         try{ //connectar ao SGBD
 
