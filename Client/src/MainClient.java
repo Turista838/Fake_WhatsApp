@@ -11,7 +11,7 @@ public class MainClient {
         }
 
         TextUserInterface ui = new TextUserInterface(new Client(args[0], args[1]));
-        ui.authentication();
+        ui.launch();
 
     }
 }

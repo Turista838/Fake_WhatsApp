@@ -8,22 +8,19 @@ import java.net.DatagramSocket;
 
 public class MainGRDS {
 
-    //private ProcessClientMessagesUDP processClientMessagesUDP;
-    //private ProcessServerMessagesUDP processServerMessagesUDP;
-    private ServerList serverList;
     private static final int MAX_SIZE = 10000;
 
     public static void main(String[] args) {
 
+        ServerList serverList = new ServerList();
+        String[] serverIpAndPort = new String[2];
         int listeningPort;
+
         DatagramSocket socket = null;
         DatagramPacket packet;
 
         ByteArrayInputStream bin;
         ObjectInputStream oin;
-
-        ByteArrayOutputStream bout;
-        ObjectOutputStream oout;
 
         if(args.length != 1){
             System.out.println("Arguments needed: <LISTENING PORT>");
@@ -48,14 +45,18 @@ public class MainGRDS {
 
                     Object obj = oin.readObject();
 
-                    if(obj instanceof GRDSClientMessageUDP){
-                        ProcessClientMessagesUDP processClientMessages = new ProcessClientMessagesUDP(socket);
+                    if(obj instanceof GRDSClientMessageUDP){ //cliente só cai aqui na 1ª vez e quando perde ligação a 1 servidor
+                        serverIpAndPort = serverList.returnAvailableServer();
+                        ProcessClientMessagesUDP processClientMessages = new ProcessClientMessagesUDP(socket, packet, (GRDSClientMessageUDP) obj, serverIpAndPort);
                         processClientMessages.start();
                     }
-                    if(obj instanceof GRDSServerMessageUDP){
-                            //TODO add to server list
-                            ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(socket);
-                            processServerMessages.start();
+                    if(obj instanceof GRDSServerMessageUDP){ //estes serverList deviam estar contido num mutex?
+                        System.out.println("Porto do servidor: " + packet.getPort());
+                        if(!serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort())) //se já estava na lista: update time
+                            serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
+                        //pode não ser necessário resposta (não sei)
+                        ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(socket, packet, (GRDSServerMessageUDP) obj);
+                        processServerMessages.start();
                     }
                 }
                 catch(IOException e){
@@ -74,6 +75,5 @@ public class MainGRDS {
                 socket.close();
             }
         }
-
     }
 }

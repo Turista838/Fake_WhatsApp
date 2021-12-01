@@ -7,4 +7,6 @@ public class GRDSServerMessageUDP implements Serializable {
     public static final long serialVersionID = 4;
     private boolean updateBDconnection = false;
 
+    public String testMsg;
+
 }
