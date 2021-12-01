@@ -43,6 +43,7 @@ public class TextUserInterface {
                     //directMessageTCP.setChatMessage(nome);
                     try{
                         cli.getOout().writeObject(loginMessageTCP);
+                        cli.getOout().flush();
                     }
                    catch (IOException e) {
                         e.printStackTrace();
@@ -53,6 +54,7 @@ public class TextUserInterface {
                     //directMessageTCP.setChatMessage(nome);
                     try{
                         cli.getOout().writeObject(directMessageTCP);
+                        cli.getOout().flush();
                     }
                     catch (IOException e) {
                         e.printStackTrace();
@@ -63,6 +65,7 @@ public class TextUserInterface {
                     //directMessageTCP.setChatMessage(nome);
                     try{
                         cli.getOout().writeObject(groupMessageTCP);
+                        cli.getOout().flush();
                     }
                     catch (IOException e) {
                         e.printStackTrace();

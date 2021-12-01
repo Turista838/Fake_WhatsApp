@@ -94,18 +94,18 @@ public class Client {
 
             oout = new ObjectOutputStream(serverSocket.getOutputStream());
             oin = new ObjectInputStream(serverSocket.getInputStream());
-            while (true) { //TODO remover true
-
-                System.out.println("introduza 1 nome"); //TODO APAGAR
-                nome = s.next(); //TODO APAGAR
-
-                DirectMessageTCP directMessageTCP = new DirectMessageTCP(); //TODO é aqui que vamos enviar classes, de acordo o que escolhemos na interface
-                directMessageTCP.setChatMessage(nome);
-
-                oout.writeObject(directMessageTCP);
-                oout.flush();
-
-            }
+//            while (true) { //TODO APAGAR
+//
+//                System.out.println("introduza 1 nome"); //TODO APAGAR
+//                nome = s.next(); //TODO APAGAR
+//
+//                DirectMessageTCP directMessageTCP = new DirectMessageTCP(); //TODO é aqui que vamos enviar classes, de acordo o que escolhemos na interface
+//                directMessageTCP.setChatMessage(nome);
+//
+//                oout.writeObject(directMessageTCP);
+//                oout.flush();
+//
+//            }
         }catch(UnknownHostException e){
             System.out.println("Destino desconhecido:\n\t"+e);
         }catch(NumberFormatException e){
@@ -116,13 +116,14 @@ public class Client {
             System.out.println("Ocorreu um erro ao nivel do mySocket TCP:\n\t"+e);
         }catch(IOException e){
             System.out.println("Ocorreu um erro no acesso ao mySocket:\n\t"+e);
-        }finally{
-            if(serverSocket != null){
-                try {
-                    serverSocket.close();
-                } catch (IOException e) { }
-            }
         }
+//        finally{ //TODO ATENÇÃO QUE O CLIENTE DEVE FECHAR O SOCKET CORRECTAMENTE QUANDO SAIR
+//            if(serverSocket != null){
+//                try {
+//                    serverSocket.close();
+//                } catch (IOException e) { }
+//            }
+//        }
     }
 
     public String getServerIP() {
