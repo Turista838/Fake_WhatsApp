@@ -1,35 +1,36 @@
-package Model;
-import SharedClasses.*;
+package Data;
+
+import SharedClasses.GRDSClientMessageUDP;
 
 import java.io.*;
 import java.net.*;
-import java.util.GregorianCalendar;
 import java.util.Scanner;
 
 public class Client {
-
     public static final int MAX_SIZE = 10000;
     public static final int TIMEOUT = 10; //segundos
 
-    InetAddress gbdsAddr = null; //TODO tudo a private?
-    String gbdsIP;
-    int gbdsPort;
+    private String username;
+    private Boolean loggedIn = false;
 
-    String serverIP;
-    int serverPort;
+    private InetAddress gbdsAddr = null;
+    private String gbdsIP;
+    private int gbdsPort;
 
-    InetAddress serverAddr = null;
-    Socket serverSocket = null;
+    private String serverIP;
+    private int serverPort;
 
-    ByteArrayOutputStream bout; //enviar
-    ObjectOutputStream oout; //enviar
+    private InetAddress serverAddr = null;
+    private Socket serverSocket = null;
 
-    ByteArrayInputStream bin; //receber
-    ObjectInputStream oin; //receber
+    private ByteArrayOutputStream bout; //enviar
+    private ObjectOutputStream oout; //enviar
 
-    DatagramSocket socket = null;
-    DatagramPacket packet = null;
+    private ByteArrayInputStream bin; //receber
+    private ObjectInputStream oin; //receber
 
+    private DatagramSocket socket = null;
+    private DatagramPacket packet = null;
 
 
     public Client(String args0, String args1){
@@ -70,7 +71,7 @@ public class Client {
             serverIP = grdsClientMessageUDP.getServerIP();
             serverPort = grdsClientMessageUDP.getServerPort();
 
-            connectServer(grdsClientMessageUDP.getServerIP(), grdsClientMessageUDP.getServerPort());
+            connectServer(grdsClientMessageUDP.getServerIP(), grdsClientMessageUDP.getServerPort()); //connectServer
 
 
         }catch(Exception e){
@@ -83,8 +84,8 @@ public class Client {
     }
 
     public void connectServer(String serverIP, int serverPort) {
-    String nome;
-    Scanner s = new Scanner(System.in);
+        String nome;
+        Scanner s = new Scanner(System.in);
         try{
 
             //Construir o pedido
@@ -144,5 +145,12 @@ public class Client {
 
     public ObjectInputStream getOin() {
         return oin;
+    }
+
+    public Boolean getLoggedIn() { return loggedIn; }
+
+    public void login(String username, String password) {
+        loggedIn = true;
+        //TODO decidicir se é aqui que se vão tratar de enviar msgs (na classe Cliente)
     }
 }

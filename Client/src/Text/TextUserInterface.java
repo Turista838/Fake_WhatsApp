@@ -1,5 +1,5 @@
 package Text;
-import Model.Client;
+import Data.Client;
 import SharedClasses.*;
 
 import java.io.IOException;
@@ -9,12 +9,12 @@ import java.util.Scanner;
 
 public class TextUserInterface {
 
-    private Client cli;
+    private Client client;
     ObjectOutputStream oout; //enviar
     ObjectInputStream oin; //receber
 
     public TextUserInterface(Client c) {
-        cli = c;
+        client = c;
     }
 
     private void uiMainMenu() {
@@ -42,8 +42,8 @@ public class TextUserInterface {
                     LoginMessageTCP loginMessageTCP = new LoginMessageTCP();
                     //directMessageTCP.setChatMessage(nome);
                     try{
-                        cli.getOout().writeObject(loginMessageTCP);
-                        cli.getOout().flush();
+                        client.getOout().writeObject(loginMessageTCP);
+                        client.getOout().flush();
                     }
                    catch (IOException e) {
                         e.printStackTrace();
@@ -53,8 +53,8 @@ public class TextUserInterface {
                     DirectMessageTCP directMessageTCP = new DirectMessageTCP();
                     //directMessageTCP.setChatMessage(nome);
                     try{
-                        cli.getOout().writeObject(directMessageTCP);
-                        cli.getOout().flush();
+                        client.getOout().writeObject(directMessageTCP);
+                        client.getOout().flush();
                     }
                     catch (IOException e) {
                         e.printStackTrace();
@@ -64,8 +64,8 @@ public class TextUserInterface {
                     GroupMessageTCP groupMessageTCP = new GroupMessageTCP();
                     //directMessageTCP.setChatMessage(nome);
                     try{
-                        cli.getOout().writeObject(groupMessageTCP);
-                        cli.getOout().flush();
+                        client.getOout().writeObject(groupMessageTCP);
+                        client.getOout().flush();
                     }
                     catch (IOException e) {
                         e.printStackTrace();
@@ -78,7 +78,7 @@ public class TextUserInterface {
 
     public void launch() {
         
-        cli.connectGRDS();
+        client.connectGRDS();
         //cli.connectServer(cli.getServerIP(), cli.getServerPort());
         uiMainMenu();
         //TODO else autenticar (autenticar só depois de estar ligado a um servidor)
