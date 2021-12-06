@@ -4,6 +4,7 @@ import TCP.ProcessClientMessagesTCP;
 
 import java.io.*;
 import java.net.*;
+import java.sql.*;
 
 public class MainServer {
 
@@ -11,6 +12,8 @@ public class MainServer {
     public static final int TIMEOUT = 10; //segundos
     public static final String MULTICAST_IP = "230.30.30.30";
     public static final int MULTICAST_PORT = 3030;
+    public static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+    public static final String dbUrl = "jdbc:mysql://"+"127.0.0.1"+"/"+"pd_tp_final";
 
     public static void main(String[] args) {
 
@@ -34,6 +37,23 @@ public class MainServer {
         MulticastSocket multicastSocket = null;
 
         GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP();
+
+        Connection conn = null;
+        Statement stmt = null;
+
+        try {
+            Class.forName(JDBC_DRIVER);
+        } catch (ClassNotFoundException ex) {
+            System.out.println(ex);
+        }
+
+        try{
+            conn = DriverManager.getConnection(dbUrl, "root", "123456");
+            stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
+        }
+        catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
 
         if(args.length == 2){
 
@@ -69,13 +89,13 @@ public class MainServer {
                     System.out.println(socketUDP.getLocalPort()); //TODO melhorar?
 
                     serverSocketTCP = new ServerSocket(socketUDP.getLocalPort());
-                    System.out.println("cheguei aqui 1");
+
                     while(true){ //TODO remover este true
 
                         try{
                             clientSocketTCP = serverSocketTCP.accept();
                             //clientSocketTCP.setSoTimeout(TIMEOUT);
-                            ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(clientSocketTCP, clientList);
+                            ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(clientSocketTCP, clientList, stmt);
                             processClientMessagesTCP.start();
                         }
                         catch(IOException e){

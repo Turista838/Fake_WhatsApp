@@ -1,17 +1,21 @@
 package Data;
 
-import SharedClasses.GRDSClientMessageUDP;
+import SharedClasses.*;
+import SharedClasses.Data.MessageList;
 
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
+import java.util.ArrayList;
 
 public class Client {
     public static final int MAX_SIZE = 10000;
     public static final int TIMEOUT = 10; //segundos
 
-    private String username;
     private Boolean loggedIn = false;
+    private Boolean selectedContactIsGroup = false;
+    private ArrayList contactList;
+    private ArrayList msgList;
+    private String username;
 
     private InetAddress gbdsAddr = null;
     private String gbdsIP;
@@ -36,6 +40,9 @@ public class Client {
     public Client(String args0, String args1){
         gbdsIP = args0; //IP GRDS
         gbdsPort = Integer.parseInt(args1); //Porto GRDS
+        contactList = new ArrayList<String>();
+        msgList = new ArrayList<MessageList>();
+        connectGRDS();
     }
 
 
@@ -83,9 +90,8 @@ public class Client {
         }
     }
 
-    public void connectServer(String serverIP, int serverPort) {
-        String nome;
-        Scanner s = new Scanner(System.in);
+    public void connectServer(String serverIP, int serverPort) { //TODO talvez mudar esta conecção para outra classe
+
         try{
 
             //Construir o pedido
@@ -95,18 +101,7 @@ public class Client {
 
             oout = new ObjectOutputStream(serverSocket.getOutputStream());
             oin = new ObjectInputStream(serverSocket.getInputStream());
-//            while (true) { //TODO APAGAR
-//
-//                System.out.println("introduza 1 nome"); //TODO APAGAR
-//                nome = s.next(); //TODO APAGAR
-//
-//                DirectMessageTCP directMessageTCP = new DirectMessageTCP(); //TODO é aqui que vamos enviar classes, de acordo o que escolhemos na interface
-//                directMessageTCP.setChatMessage(nome);
-//
-//                oout.writeObject(directMessageTCP);
-//                oout.flush();
-//
-//            }
+
         }catch(UnknownHostException e){
             System.out.println("Destino desconhecido:\n\t"+e);
         }catch(NumberFormatException e){
@@ -147,10 +142,71 @@ public class Client {
         return oin;
     }
 
+    public void setUsername(String username) { this.username = username; }
+
+    public String getUsername() { return username; }
+
     public Boolean getLoggedIn() { return loggedIn; }
 
+    public void setLoggedIn(boolean flag) { loggedIn = flag; }
+
+    public ArrayList<String> getContactList() { return contactList; }
+
+    public ArrayList<MessageList> getMessageList() { return msgList; }
+
+    public boolean getContactIsGroup() { return selectedContactIsGroup; }
+
     public void login(String username, String password) {
-        loggedIn = true;
-        //TODO decidicir se é aqui que se vão tratar de enviar msgs (na classe Cliente)
+        try{
+            LoginMessageTCP loginMessageTCP = new LoginMessageTCP(username, password);
+            oout.writeObject(loginMessageTCP);
+            oout.flush();
+            loginMessageTCP = (LoginMessageTCP) oin.readObject();
+            setLoggedIn(loginMessageTCP.getLoginStatus());
+            if(getLoggedIn()) {
+                setUsername(loginMessageTCP.getUsername());
+                updateContactList();
+            }
+            System.out.println(getLoggedIn());
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateContactList() {
+        try{
+            UpdateContactListTCP updateContactListTCP = new UpdateContactListTCP(getUsername());
+            oout.writeObject(updateContactListTCP);
+            oout.flush();
+            updateContactListTCP = (UpdateContactListTCP) oin.readObject();
+            contactList = updateContactListTCP.getContactList();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void requestMessages(String selectedContact) {
+        try{
+            UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(getUsername(), selectedContact);
+            oout.writeObject(updateMessageListTCP);
+            oout.flush();
+            updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
+            msgList = updateMessageListTCP.getMessageList();
+            selectedContactIsGroup = updateMessageListTCP.getIsGroup();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendDirectMessage(String message, String selectedContact) {
+        try{
+            DirectMessageTCP directMessageTCP = new DirectMessageTCP(getUsername(), message, selectedContact);
+            oout.writeObject(directMessageTCP);
+            oout.flush();
+            UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
+            msgList = updateMessageListTCP.getMessageList();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -14,10 +16,14 @@ public class ProcessClientMessagesTCP extends Thread {
 
     private final Socket socket;
     private ClientList clientList;
+    private Statement stmt;
+    private ResultSet rs;
 
-    public ProcessClientMessagesTCP(Socket socket, ClientList clientList){
+    public ProcessClientMessagesTCP(Socket socket, ClientList clientList, Statement stmt){
         this.socket = socket;
         this.clientList = clientList;
+        this.stmt = stmt;
+        rs = null;
     }
 
     public void run(){
@@ -36,36 +42,79 @@ public class ProcessClientMessagesTCP extends Thread {
                     return;
                 }
 
-                if (obj instanceof String) { //primeira mensagem
-                    //TODO
-                    System.out.println("Recebi String");
+                if (obj instanceof LoginMessageTCP) { //Processa Login
+                    System.out.println("cheguei LoginMessageTCP. Recebi: ");
+                    System.out.println("Username: " + ((LoginMessageTCP) obj).getUsername());
+                    System.out.println("Password: " + ((LoginMessageTCP) obj).getPassword());
+                    rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((LoginMessageTCP) obj).getUsername() + "\" AND Password = \"" + ((LoginMessageTCP) obj).getPassword() + "\");");
+                    rs.next();
+                    ((LoginMessageTCP) obj).setConnected(rs.getBoolean(1));
+                    System.out.println(((LoginMessageTCP) obj).getLoginStatus());
+                    oout.writeObject(obj);
+                    oout.flush();
+                    //TODO actualizar a lista de como esse utilizador está online
                 }
 
-                if (obj instanceof LoginMessageTCP) { //se é uma mensagem de login
-                    //TODO
-                    System.out.println("Recebi LoginMessageTCP");
+                if (obj instanceof UpdateContactListTCP) { //Update Lista de Contactos
+                    System.out.println("Recebi UpdateContactListTCP");
+                    rs = stmt.executeQuery("SELECT Contacto from tem_o_contacto WHERE Username = \"" + ((UpdateContactListTCP) obj).getUsername() + "\";");
+                    while (rs.next()){
+                        ((UpdateContactListTCP) obj).addContact(rs.getString(1));
+                    }
+                    oout.writeObject(obj);
+                    oout.flush();
+                }
+
+                if (obj instanceof UpdateMessageListTCP) { //Update Lista de Mensagens
+                    System.out.println("Recebi UpdateContactListTCP");
+                    boolean isGroup = false;
+                    rs = stmt.executeQuery("SELECT * from mensagem_de_grupo;");
+                    while (rs.next()){
+                        if(rs.getString("Nome") == ((UpdateMessageListTCP) obj).getContact()){
+                            isGroup = true;
+                            //TODO query mensagem de grupo
+                        }
+                    }
+                    if(isGroup){
+                        ((UpdateMessageListTCP) obj).setIsGroup(true);
+                    }
+                    else  {
+                        ((UpdateMessageListTCP) obj).setIsGroup(false);
+                        rs = stmt.executeQuery("SELECT * from mensagem_de_pares WHERE (Remetente = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\" AND Destinatario = \"" + ((UpdateMessageListTCP) obj).getContact() + "\") OR (Remetente = \"" + ((UpdateMessageListTCP) obj).getContact() + "\" AND Destinatario = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\");");
+                        while (rs.next()) { //TODO devem ser alteradas as flags de mensagem vista
+                            ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                        }
+                    }
+                    oout.writeObject(obj);
+                    oout.flush();
                 }
 
                 if (obj instanceof DirectMessageTCP) { //se é uma mensagem individual
-                    //TODO então mas
-                    // servidor recebe uma mensagem do cliente
-                    // pega na mensagem e cola na base de dados
-                    // pega na mensagem e envia TCP ao outro cliente
-                    // então mas assim tem de saber o IP e porto do outro cliente, onde o vai buscar?
-                    // é que disse que não era preciso guardar os IPs dos clientes na BD
-                    // e quando o cliente está conectado noutro servidor?
-                    //System.out.println(((DirectMessageTCP) obj).getChatMessage()); //só para testar
-                    //clientList.checkAddClient(((DirectMessageTCP) obj).getChatMessage(), "testar", 1);
-                    //clientList.teste();
-                    //oout.writeObject(new Time(calendar.get(GregorianCalendar.HOUR_OF_DAY), calendar.get(GregorianCalendar.MINUTE), calendar.get(GregorianCalendar.SECOND)));
-                    //oout.flush();
                     System.out.println("Recebi DirectMessageTCP");
+                    System.out.println(((DirectMessageTCP) obj).getChatMessage());
+                    System.out.println(((DirectMessageTCP) obj).getSender());
+                    System.out.println(((DirectMessageTCP) obj).getdestination());
+                    //inserção da mensagem na BD
+                    System.out.println("INSERT INTO mensagem_de_pares VALUES (0, 0, current_timestamp(), \"" + ((DirectMessageTCP) obj).getChatMessage() + "\", \"" + ((DirectMessageTCP) obj).getSender() +"\", \"" + ((DirectMessageTCP) obj).getdestination() + "\");");
+                    stmt.executeUpdate("INSERT INTO mensagem_de_pares VALUES (0, 0, current_timestamp(), \"" + ((DirectMessageTCP) obj).getChatMessage() + "\", \"" + ((DirectMessageTCP) obj).getSender() +"\", \"" + ((DirectMessageTCP) obj).getdestination() + "\");");
+                    //enviar o histórico de mensagens de volta
+                    UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(((DirectMessageTCP) obj).getSender(), ((DirectMessageTCP) obj).getdestination());
+                    rs = stmt.executeQuery("SELECT * from mensagem_de_pares WHERE (Remetente = \"" + ((DirectMessageTCP) obj).getSender() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getdestination() + "\") OR (Remetente = \"" + ((DirectMessageTCP) obj).getdestination() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getSender() + "\");");
+                    while (rs.next()) {
+                        updateMessageListTCP.addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                    }
+                    oout.writeObject(updateMessageListTCP);
+                    oout.flush();
                 }
 
                 if (obj instanceof GroupMessageTCP) { //se é uma mensagem de grupo
                     System.out.println("Recebi GroupMessageTCP");
-                    //TODO
+
                 }
+
+                //TODO enviar mensagens a ao GRDS a dizer que houve uma alteração na BD
+                //TODO enviar ao cliente afetado (destinatário para atualizar a sua vista)
+
             }
 
         }catch(Exception e){

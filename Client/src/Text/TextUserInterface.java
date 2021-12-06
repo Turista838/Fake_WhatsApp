@@ -39,7 +39,7 @@ public class TextUserInterface {
                 System.out.println("Introduza num 1 a 3");
             else{
                 if(value == 1){
-                    LoginMessageTCP loginMessageTCP = new LoginMessageTCP();
+                    LoginMessageTCP loginMessageTCP = new LoginMessageTCP("Teste", "123456");
                     //directMessageTCP.setChatMessage(nome);
                     try{
                         client.getOout().writeObject(loginMessageTCP);
@@ -50,10 +50,10 @@ public class TextUserInterface {
                     }
                 }
                 if(value == 2){
-                    DirectMessageTCP directMessageTCP = new DirectMessageTCP();
+                    //DirectMessageTCP directMessageTCP = new DirectMessageTCP();
                     //directMessageTCP.setChatMessage(nome);
                     try{
-                        client.getOout().writeObject(directMessageTCP);
+                        //client.getOout().writeObject(directMessageTCP);
                         client.getOout().flush();
                     }
                     catch (IOException e) {

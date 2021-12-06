@@ -32,10 +32,4 @@ public class ClientList {
         return true;
     }
 
-    public void teste(){
-        System.out.println("sou teste e fui chamado");
-        for(ClientInfo clInfo : arrayClientList){
-            System.out.println(clInfo.getUsername());
-        }
-    }
 }

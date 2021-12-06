@@ -1,6 +1,7 @@
 package Interface;
 
 import Data.ClientOBS;
+import SharedClasses.Data.MessageList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,6 +20,7 @@ public class MainPane extends BorderPane {
     private ClientOBS clientOBS;
     private ListView usersList;
     private ListView conversationList;
+    private String selectedContact;
 
     private Text messageText;
     private TextField messageTextField;
@@ -48,9 +50,6 @@ public class MainPane extends BorderPane {
 
         usersList = new ListView();
         conversationList = new ListView();
-
-        for(int i = 0; i < 30; i++) //TODO apagar
-            usersList.getItems().add("usersList");
 
         for(int i = 0; i < 30; i++) //TODO apagar
             conversationList.getItems().add("conversationList");
@@ -109,15 +108,21 @@ public class MainPane extends BorderPane {
         //writeMessageBox.setTranslateX(247.5);
         writeMessageBox.setPadding(new Insets(10, 10, 10, 10));
 
-        joinGroupButton.setOnAction(ev -> {
-            //clientOBS.login(usernameField.getText(), passwordField.getText());
-
+        sendMessageButton.setOnAction(ev -> {
+            if(!messageTextField.getText().isEmpty()) {
+                if (clientOBS.getContactIsGroup()) {
+                    //clientOBS.sendGroupMessage(messageTextField.getText());
+                } else {
+                    clientOBS.sendDirectMessage(messageTextField.getText(), selectedContact);
+                }
+            }
         });
 
-        usersList.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        usersList.setOnMouseClicked(new EventHandler<MouseEvent>() { //clique nos contactos faz update da conversa desse contacto
             @Override
             public void handle(MouseEvent event) {
-                System.out.println("clicked on " + usersList.getSelectionModel().getSelectedIndices());
+                selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
+                clientOBS.requestMessages(selectedContact);
             }
         });
 
@@ -143,7 +148,18 @@ public class MainPane extends BorderPane {
 
     private void update() {
         this.setVisible(clientOBS.getClientStatus());
-        //listViewRef.getItems().add(“item-name”);
+
+        usersList.getItems().clear();
+        conversationList.getItems().clear();
+
+        for (String contact : clientOBS.getContactList()) {
+            usersList.getItems().add(contact);
+        }
+
+        for (MessageList message : clientOBS.getMessageList()) {
+            conversationList.getItems().add(message.message);
+        }
+
     }
 
 }
