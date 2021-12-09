@@ -1,5 +1,6 @@
 package Data;
 
+import java.io.*;
 import java.util.ArrayList;
 
 public class ClientList {
@@ -10,26 +11,18 @@ public class ClientList {
         arrayClientList = new ArrayList<ClientInfo>();
     }
 
-    public boolean checkAddClient(String username, String hostAddress, int port){
-
-//        if(arrayServerList.isEmpty()){ //TODO copy paste do ServerList (não sei se será preciso checks)
-//            ServerInfo svInfo = new ServerInfo(hostAddress, port);
-//            arrayServerList.add(svInfo);
-//            return true;
-//        }
-//
-//        for(ServerInfo svInfo : arrayServerList){
-//            if(svInfo.getServerIP().equals(hostAddress) && svInfo.getServerPort() == port)
-//                return false;
-//        }
-//
-//        ServerInfo svInfo = new ServerInfo(hostAddress, port);
-//        arrayServerList.add(svInfo);
-
-        ClientInfo clInfo = new ClientInfo(username, hostAddress, port);
-        arrayClientList.add(clInfo);
-
-        return true;
+    public void addClientToClientList(String username, ObjectOutputStream oout) {
+        arrayClientList.add(new ClientInfo(username, oout));
+        System.out.println("Fui adicionado");
     }
 
+    public ObjectOutputStream getClientOout (String username){
+        for(ClientInfo c : arrayClientList){
+            if(c.getUsername().equals(username)) {
+                System.out.println("encontrei " + c.getUsername());
+                return c.getOout();
+            }
+        }
+        return null;
+    }
 }

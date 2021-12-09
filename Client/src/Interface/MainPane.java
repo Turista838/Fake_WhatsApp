@@ -13,7 +13,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import static Data.ClientOBS.STATE_CHANGED;
+import static Data.ClientOBS.VIEW_CHANGED;
 
 public class MainPane extends BorderPane {
 
@@ -126,7 +126,8 @@ public class MainPane extends BorderPane {
             }
         });
 
-        clientOBS.addPropertyChangeListener(STATE_CHANGED, evt->update());
+
+        clientOBS.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
 
         menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,

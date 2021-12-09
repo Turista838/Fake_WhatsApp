@@ -9,7 +9,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import static Data.ClientOBS.STATE_CHANGED;
+import static Data.ClientOBS.VIEW_CHANGED;
 
 public class LoginPane extends BorderPane {
 
@@ -66,7 +66,7 @@ public class LoginPane extends BorderPane {
             clientOBS.login(usernameField.getText(), passwordField.getText());
         });
 
-        clientOBS.addPropertyChangeListener(STATE_CHANGED, evt->update());
+        clientOBS.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
         titleBox.setBackground(new Background(new BackgroundFill(Color.LIGHTCYAN,
                 CornerRadii.EMPTY,

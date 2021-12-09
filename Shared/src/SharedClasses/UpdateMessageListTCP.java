@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class UpdateMessageListTCP implements Serializable {
 
-    public static final long serialVersionID = 8;
+    public static final long serialVersionID = 9;
 
     private String username;
     private String contact;

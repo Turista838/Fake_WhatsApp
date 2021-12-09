@@ -33,46 +33,46 @@ public class TextUserInterface {
 
         while (!s.hasNextInt()) s.next(); //é para avançar só se pusermos um inteiro
 
-        do{
-            value = s.nextInt();
-            if(value < 1 || value > 4)
-                System.out.println("Introduza num 1 a 3");
-            else{
-                if(value == 1){
-                    LoginMessageTCP loginMessageTCP = new LoginMessageTCP("Teste", "123456");
-                    //directMessageTCP.setChatMessage(nome);
-                    try{
-                        client.getOout().writeObject(loginMessageTCP);
-                        client.getOout().flush();
-                    }
-                   catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if(value == 2){
-                    //DirectMessageTCP directMessageTCP = new DirectMessageTCP();
-                    //directMessageTCP.setChatMessage(nome);
-                    try{
-                        //client.getOout().writeObject(directMessageTCP);
-                        client.getOout().flush();
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if(value == 3){
-                    GroupMessageTCP groupMessageTCP = new GroupMessageTCP();
-                    //directMessageTCP.setChatMessage(nome);
-                    try{
-                        client.getOout().writeObject(groupMessageTCP);
-                        client.getOout().flush();
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }while(value > 0 || value < 4);
+//        do{
+//            value = s.nextInt();
+//            if(value < 1 || value > 4)
+//                System.out.println("Introduza num 1 a 3");
+//            else{
+//                if(value == 1){
+//                    //LoginMessageTCP loginMessageTCP = new LoginMessageTCP("Teste", "123456");
+//                    //directMessageTCP.setChatMessage(nome);
+//                    try{
+//                        client.getOout().writeObject(loginMessageTCP);
+//                        client.getOout().flush();
+//                    }
+//                   catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                if(value == 2){
+//                    //DirectMessageTCP directMessageTCP = new DirectMessageTCP();
+//                    //directMessageTCP.setChatMessage(nome);
+//                    try{
+//                        //client.getOout().writeObject(directMessageTCP);
+//                        client.getOout().flush();
+//                    }
+//                    catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//                if(value == 3){
+//                    GroupMessageTCP groupMessageTCP = new GroupMessageTCP();
+//                    //directMessageTCP.setChatMessage(nome);
+//                    try{
+//                        client.getOout().writeObject(groupMessageTCP);
+//                        client.getOout().flush();
+//                    }
+//                    catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }while(value > 0 || value < 4);
     }
 
 

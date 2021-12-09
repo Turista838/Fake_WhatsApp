@@ -2,6 +2,7 @@ package Data;
 
 import SharedClasses.*;
 import SharedClasses.Data.MessageList;
+import javafx.scene.control.Alert;
 
 import java.io.*;
 import java.net.*;
@@ -156,31 +157,36 @@ public class Client {
 
     public boolean getContactIsGroup() { return selectedContactIsGroup; }
 
-    public void login(String username, String password) {
+    public boolean login(String username, String password) {
         try{
             LoginMessageTCP loginMessageTCP = new LoginMessageTCP(username, password);
             oout.writeObject(loginMessageTCP);
             oout.flush();
-            loginMessageTCP = (LoginMessageTCP) oin.readObject();
-            setLoggedIn(loginMessageTCP.getLoginStatus());
-            if(getLoggedIn()) {
-                setUsername(loginMessageTCP.getUsername());
-                updateContactList();
-            }
-            System.out.println(getLoggedIn());
-        } catch (IOException | ClassNotFoundException e) {
+//            loginMessageTCP = (LoginMessageTCP) oin.readObject();
+//            setLoggedIn(loginMessageTCP.getLoginStatus());
+//            if(getLoggedIn()) {
+//                setUsername(loginMessageTCP.getUsername());
+//                updateContactList();
+//                return true;
+//            }
+//            else{
+//                System.out.println(getLoggedIn());
+//                return false;
+//            }
+        } catch (IOException /*| ClassNotFoundException*/ e) {
             e.printStackTrace();
         }
+        return false;
     }
 
-    private void updateContactList() {
+    public void updateContactList() {
         try{
             UpdateContactListTCP updateContactListTCP = new UpdateContactListTCP(getUsername());
             oout.writeObject(updateContactListTCP);
             oout.flush();
-            updateContactListTCP = (UpdateContactListTCP) oin.readObject();
-            contactList = updateContactListTCP.getContactList();
-        } catch (IOException | ClassNotFoundException e) {
+//            updateContactListTCP = (UpdateContactListTCP) oin.readObject();
+//            contactList = updateContactListTCP.getContactList();
+        } catch (IOException /*| ClassNotFoundException */ e) {
             e.printStackTrace();
         }
     }
@@ -190,10 +196,10 @@ public class Client {
             UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(getUsername(), selectedContact);
             oout.writeObject(updateMessageListTCP);
             oout.flush();
-            updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
-            msgList = updateMessageListTCP.getMessageList();
-            selectedContactIsGroup = updateMessageListTCP.getIsGroup();
-        } catch (IOException | ClassNotFoundException e) {
+//            updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
+//            msgList = updateMessageListTCP.getMessageList();
+            //selectedContactIsGroup = updateMessageListTCP.getIsGroup();
+        } catch (IOException /*| ClassNotFoundException*/ e) {
             e.printStackTrace();
         }
     }
@@ -203,10 +209,17 @@ public class Client {
             DirectMessageTCP directMessageTCP = new DirectMessageTCP(getUsername(), message, selectedContact);
             oout.writeObject(directMessageTCP);
             oout.flush();
-            UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
-            msgList = updateMessageListTCP.getMessageList();
-        } catch (IOException | ClassNotFoundException e) {
+//            UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) oin.readObject(); //TODO mover isto para o cliOBS?
+//            msgList = updateMessageListTCP.getMessageList();
+        } catch (IOException /*| ClassNotFoundException */e) {
             e.printStackTrace();
         }
     }
+
+
+    public void updateMsgList(ArrayList mList) { msgList = mList; }
+
+    public void setContactList(ArrayList<String> cList) { contactList = cList; }
+
+    public void setSelectedContactIsGroup(Boolean selectedContactIsGroup) { this.selectedContactIsGroup = selectedContactIsGroup; }
 }

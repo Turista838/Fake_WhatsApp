@@ -35,11 +35,24 @@ public class ProcessClientMessagesTCP extends Thread {
             oout = new ObjectOutputStream(socket.getOutputStream());
             oin = new ObjectInputStream(socket.getInputStream());
 
-            while(true) {
+            while(true) { //TODO alterar este true
                 Object obj = oin.readObject();
 
                 if (obj == null) { //EOF
                     return;
+                }
+
+                if (obj instanceof RegisterMessageTCP) { //Processa Registo
+                    System.out.println("cheguei RegisterMessageTCP. Recebi: ");
+                    System.out.println("Username: " + ((LoginMessageTCP) obj).getUsername());
+                    rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((RegisterMessageTCP) obj).getUsername() + "\");");
+                    rs.next();
+                    if(!rs.getBoolean(1)){ //se não encontrou, pode registar
+                        stmt.executeUpdate("INSERT INTO utilizador VALUES (\"" + ((RegisterMessageTCP) obj).getUsername() + "\", \"" + ((RegisterMessageTCP) obj).getNome() + "\", \"" + ((RegisterMessageTCP) obj).getPassword() + "\", 0, current_timestamp())");
+                    } //TODO NÃO TESTADO - nem foi criado ainda no CliOBS para enviar
+                    ((RegisterMessageTCP) obj).setRegistered(rs.getBoolean(1));
+                    oout.writeObject(obj);
+                    oout.flush();
                 }
 
                 if (obj instanceof LoginMessageTCP) { //Processa Login
@@ -49,6 +62,10 @@ public class ProcessClientMessagesTCP extends Thread {
                     rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((LoginMessageTCP) obj).getUsername() + "\" AND Password = \"" + ((LoginMessageTCP) obj).getPassword() + "\");");
                     rs.next();
                     ((LoginMessageTCP) obj).setConnected(rs.getBoolean(1));
+                    if(rs.getBoolean(1)) {
+                        System.out.println("entrei aqui");
+                        clientList.addClientToClientList(((LoginMessageTCP) obj).getUsername(), oout);
+                    }
                     System.out.println(((LoginMessageTCP) obj).getLoginStatus());
                     oout.writeObject(obj);
                     oout.flush();
@@ -95,16 +112,23 @@ public class ProcessClientMessagesTCP extends Thread {
                     System.out.println(((DirectMessageTCP) obj).getSender());
                     System.out.println(((DirectMessageTCP) obj).getdestination());
                     //inserção da mensagem na BD
-                    System.out.println("INSERT INTO mensagem_de_pares VALUES (0, 0, current_timestamp(), \"" + ((DirectMessageTCP) obj).getChatMessage() + "\", \"" + ((DirectMessageTCP) obj).getSender() +"\", \"" + ((DirectMessageTCP) obj).getdestination() + "\");");
+                    //System.out.println("INSERT INTO mensagem_de_pares VALUES (0, 0, current_timestamp(), \"" + ((DirectMessageTCP) obj).getChatMessage() + "\", \"" + ((DirectMessageTCP) obj).getSender() +"\", \"" + ((DirectMessageTCP) obj).getdestination() + "\");");
                     stmt.executeUpdate("INSERT INTO mensagem_de_pares VALUES (0, 0, current_timestamp(), \"" + ((DirectMessageTCP) obj).getChatMessage() + "\", \"" + ((DirectMessageTCP) obj).getSender() +"\", \"" + ((DirectMessageTCP) obj).getdestination() + "\");");
                     //enviar o histórico de mensagens de volta
                     UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(((DirectMessageTCP) obj).getSender(), ((DirectMessageTCP) obj).getdestination());
+                    updateMessageListTCP.setIsGroup(false); //!!!
                     rs = stmt.executeQuery("SELECT * from mensagem_de_pares WHERE (Remetente = \"" + ((DirectMessageTCP) obj).getSender() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getdestination() + "\") OR (Remetente = \"" + ((DirectMessageTCP) obj).getdestination() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getSender() + "\");");
                     while (rs.next()) {
                         updateMessageListTCP.addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                     }
                     oout.writeObject(updateMessageListTCP);
                     oout.flush();
+                    //TODO e se o cliente estiver noutro servidor? - fazer
+                    ObjectOutputStream ooutDest = clientList.getClientOout(((DirectMessageTCP) obj).getdestination());
+                    if(ooutDest != null){
+                        ooutDest.writeObject(updateMessageListTCP);
+                        ooutDest.flush();
+                    }
                 }
 
                 if (obj instanceof GroupMessageTCP) { //se é uma mensagem de grupo
