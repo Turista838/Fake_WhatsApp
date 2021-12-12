@@ -16,7 +16,6 @@ public class DirectMessageTCP implements Serializable {
         this.destination = destination;
     }
 
-
     public String getChatMessage() {
         return chatMessage;
     }
@@ -25,7 +24,7 @@ public class DirectMessageTCP implements Serializable {
         return sender;
     }
 
-    public String getdestination() {
+    public String getDestination() {
         return destination;
     }
 }

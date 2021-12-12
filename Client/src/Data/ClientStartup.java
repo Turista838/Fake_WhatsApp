@@ -1,22 +1,13 @@
 package Data;
 
 import SharedClasses.*;
-import SharedClasses.Data.MessageList;
-import javafx.scene.control.Alert;
-
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
 
-public class Client {
+public class ClientStartup {
+
     public static final int MAX_SIZE = 10000;
     public static final int TIMEOUT = 10; //segundos
-
-    private Boolean loggedIn = false;
-    private Boolean selectedContactIsGroup = false;
-    private ArrayList contactList;
-    private ArrayList msgList;
-    private String username;
 
     private InetAddress gbdsAddr = null;
     private String gbdsIP;
@@ -38,11 +29,9 @@ public class Client {
     private DatagramPacket packet = null;
 
 
-    public Client(String args0, String args1){
+    public ClientStartup(String args0, String args1){
         gbdsIP = args0; //IP GRDS
         gbdsPort = Integer.parseInt(args1); //Porto GRDS
-        contactList = new ArrayList<String>();
-        msgList = new ArrayList<MessageList>();
         connectGRDS();
     }
 
@@ -143,83 +132,5 @@ public class Client {
         return oin;
     }
 
-    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() { return username; }
-
-    public Boolean getLoggedIn() { return loggedIn; }
-
-    public void setLoggedIn(boolean flag) { loggedIn = flag; }
-
-    public ArrayList<String> getContactList() { return contactList; }
-
-    public ArrayList<MessageList> getMessageList() { return msgList; }
-
-    public boolean getContactIsGroup() { return selectedContactIsGroup; }
-
-    public boolean login(String username, String password) {
-        try{
-            LoginMessageTCP loginMessageTCP = new LoginMessageTCP(username, password);
-            oout.writeObject(loginMessageTCP);
-            oout.flush();
-//            loginMessageTCP = (LoginMessageTCP) oin.readObject();
-//            setLoggedIn(loginMessageTCP.getLoginStatus());
-//            if(getLoggedIn()) {
-//                setUsername(loginMessageTCP.getUsername());
-//                updateContactList();
-//                return true;
-//            }
-//            else{
-//                System.out.println(getLoggedIn());
-//                return false;
-//            }
-        } catch (IOException /*| ClassNotFoundException*/ e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public void updateContactList() {
-        try{
-            UpdateContactListTCP updateContactListTCP = new UpdateContactListTCP(getUsername());
-            oout.writeObject(updateContactListTCP);
-            oout.flush();
-//            updateContactListTCP = (UpdateContactListTCP) oin.readObject();
-//            contactList = updateContactListTCP.getContactList();
-        } catch (IOException /*| ClassNotFoundException */ e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void requestMessages(String selectedContact) {
-        try{
-            UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(getUsername(), selectedContact);
-            oout.writeObject(updateMessageListTCP);
-            oout.flush();
-//            updateMessageListTCP = (UpdateMessageListTCP) oin.readObject();
-//            msgList = updateMessageListTCP.getMessageList();
-            //selectedContactIsGroup = updateMessageListTCP.getIsGroup();
-        } catch (IOException /*| ClassNotFoundException*/ e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void sendDirectMessage(String message, String selectedContact) {
-        try{
-            DirectMessageTCP directMessageTCP = new DirectMessageTCP(getUsername(), message, selectedContact);
-            oout.writeObject(directMessageTCP);
-            oout.flush();
-//            UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) oin.readObject(); //TODO mover isto para o cliOBS?
-//            msgList = updateMessageListTCP.getMessageList();
-        } catch (IOException /*| ClassNotFoundException */e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public void updateMsgList(ArrayList mList) { msgList = mList; }
-
-    public void setContactList(ArrayList<String> cList) { contactList = cList; }
-
-    public void setSelectedContactIsGroup(Boolean selectedContactIsGroup) { this.selectedContactIsGroup = selectedContactIsGroup; }
 }

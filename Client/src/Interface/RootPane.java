@@ -1,21 +1,21 @@
 package Interface;
 
-import Data.ClientOBS;
+import Data.ClientManager;
 import javafx.scene.layout.StackPane;
 
 public class RootPane extends StackPane {
 
-    private ClientOBS clientOBS;
+    private ClientManager clientManager;
     private LoginPane loginPane;
     private MainPane mainPane;
 
-    public RootPane(ClientOBS clientOBS, int width, int height){
-        this.clientOBS = clientOBS;
+    public RootPane(ClientManager clientManager, int width, int height){
+        this.clientManager = clientManager;
         setWidth(width);
         setHeight(height);
 
-        loginPane = new LoginPane(clientOBS, width, height);
-        mainPane = new MainPane(clientOBS, width, height);
+        loginPane = new LoginPane(clientManager, width, height);
+        mainPane = new MainPane(clientManager, width, height);
 
         getChildren().addAll(loginPane, mainPane);
 

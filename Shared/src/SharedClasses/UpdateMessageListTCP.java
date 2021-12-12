@@ -21,6 +21,10 @@ public class UpdateMessageListTCP implements Serializable {
         msgList = new ArrayList<MessageList>();
     }
 
+    public void setUsername(String username) { this.username = username; }
+
+    public void setContact(String contact) { this.contact = contact; }
+
     public String getUsername() {
         return username;
     }

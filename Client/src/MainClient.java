@@ -1,7 +1,6 @@
-import Data.Client;
-import Data.ClientOBS;
+import Data.ClientStartup;
+import Data.ClientManager;
 import Interface.RootPane;
-import Text.TextUserInterface;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -38,8 +37,8 @@ public class MainClient extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        ClientOBS clientOBS = new ClientOBS(new Client(arg0, arg1));
-        RootPane rootPane = new RootPane(clientOBS, 1000, 600);
+        ClientManager clientManager = new ClientManager(new ClientStartup(arg0, arg1));
+        RootPane rootPane = new RootPane(clientManager, 1000, 600);
 
         Scene scene = new Scene(rootPane,1000,600);
 

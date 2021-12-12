@@ -1,6 +1,6 @@
 package Interface;
 
-import Data.ClientOBS;
+import Data.ClientManager;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -9,11 +9,11 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import static Data.ClientOBS.VIEW_CHANGED;
+import static Data.ClientManager.VIEW_CHANGED;
 
 public class LoginPane extends BorderPane {
 
-    private ClientOBS clientOBS;
+    private ClientManager clientManager;
 
     private Text title, usernameText, passwordText, registerText;
     private TextField usernameField, passwordField;
@@ -26,8 +26,8 @@ public class LoginPane extends BorderPane {
     private HBox loginBox;
     private HBox registerBox;
 
-    public LoginPane(ClientOBS clientOBS, int width, int height){
-        this.clientOBS = clientOBS;
+    public LoginPane(ClientManager clientManager, int width, int height){
+        this.clientManager = clientManager;
         setWidth(width);
         setHeight(height);
 
@@ -63,10 +63,10 @@ public class LoginPane extends BorderPane {
         registerBox.getChildren().add(registerText);
 
         loginButton.setOnAction(ev -> {
-            clientOBS.login(usernameField.getText(), passwordField.getText());
+            clientManager.login(usernameField.getText(), passwordField.getText());
         });
 
-        clientOBS.addPropertyChangeListener(VIEW_CHANGED, evt->update());
+        clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
         titleBox.setBackground(new Background(new BackgroundFill(Color.LIGHTCYAN,
                 CornerRadii.EMPTY,
@@ -74,7 +74,7 @@ public class LoginPane extends BorderPane {
     }
 
     private void update() {
-        this.setVisible(!clientOBS.getClientStatus());
+        this.setVisible(!clientManager.getLoggedIn());
     }
 
 }

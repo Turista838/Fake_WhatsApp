@@ -1,6 +1,6 @@
 package Interface;
 
-import Data.ClientOBS;
+import Data.ClientManager;
 import SharedClasses.Data.MessageList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -13,15 +13,16 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 
-import static Data.ClientOBS.VIEW_CHANGED;
+import static Data.ClientManager.VIEW_CHANGED;
 
 public class MainPane extends BorderPane {
 
-    private ClientOBS clientOBS;
+    private ClientManager clientManager;
     private ListView usersList;
     private ListView conversationList;
     private String selectedContact;
 
+    private Text username;
     private Text messageText;
     private TextField messageTextField;
 
@@ -38,22 +39,21 @@ public class MainPane extends BorderPane {
     private Button editProfileButton;
 
     private Button removeUserButton;
-    private Button editGroupButton;
     private Button leaveGroupButton;
+    private Button editGroupButton;
     private Button sendMessageButton;
     private Button sendFileButton;
+    private Button removeMessageButton;
 
-    public MainPane(ClientOBS clientOBS, int width, int height){
-        this.clientOBS = clientOBS;
+    public MainPane(ClientManager clientManager, int width, int height){
+        this.clientManager = clientManager;
         setWidth(width);
         setHeight(height);
 
         usersList = new ListView();
         conversationList = new ListView();
 
-        for(int i = 0; i < 30; i++) //TODO apagar
-            conversationList.getItems().add("conversationList");
-
+        username = new Text();
         messageText = new Text("Message:");
         messageTextField = new TextField();
 
@@ -69,6 +69,7 @@ public class MainPane extends BorderPane {
         editGroupButton = new Button("Edit Group");
         sendMessageButton = new Button("Send");
         sendFileButton = new Button("Send File");
+        removeMessageButton = new Button("Remove Message");
 
         mainBox = new VBox();
         menuBox = new HBox();
@@ -81,7 +82,7 @@ public class MainPane extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
-        menuBox.getChildren().addAll(addUserButton, joinGroupButton, createGroupButton, editProfileButton);
+        menuBox.getChildren().addAll(username, addUserButton, joinGroupButton, createGroupButton, editProfileButton);
         menuBox.setAlignment(Pos.TOP_CENTER);
         setTop(menuBox);
         menuBox.setPadding(new Insets(10, 10, 10, 10));
@@ -102,7 +103,7 @@ public class MainPane extends BorderPane {
 
         conversationList.setPrefWidth(760);
 
-        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton);
+        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, removeMessageButton);
         writeMessageBox.setAlignment(Pos.CENTER);
         setBottom(writeMessageBox);
         //writeMessageBox.setTranslateX(247.5);
@@ -110,10 +111,10 @@ public class MainPane extends BorderPane {
 
         sendMessageButton.setOnAction(ev -> {
             if(!messageTextField.getText().isEmpty()) {
-                if (clientOBS.getContactIsGroup()) {
-                    //clientOBS.sendGroupMessage(messageTextField.getText());
+                if (clientManager.getContactIsGroup()) {
+                    clientManager.sendGroupMessage(messageTextField.getText());
                 } else {
-                    clientOBS.sendDirectMessage(messageTextField.getText(), selectedContact);
+                    clientManager.sendDirectMessage(messageTextField.getText());
                 }
             }
         });
@@ -122,12 +123,17 @@ public class MainPane extends BorderPane {
             @Override
             public void handle(MouseEvent event) {
                 selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
-                clientOBS.requestMessages(selectedContact);
+                if(selectedContact.substring(selectedContact.length() - 1).equals("*")){ //remover o *
+                    clientManager.removeAsterisk(selectedContact);
+                    selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
+                }
+                clientManager.setSelectedContact(selectedContact);
+                clientManager.requestMessages();
             }
         });
 
 
-        clientOBS.addPropertyChangeListener(VIEW_CHANGED, evt->update());
+        clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
 
         menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
@@ -148,16 +154,16 @@ public class MainPane extends BorderPane {
 
 
     private void update() {
-        this.setVisible(clientOBS.getClientStatus());
-
+        this.setVisible(clientManager.getLoggedIn());
+        username.setText(clientManager.getUsername());
         usersList.getItems().clear();
         conversationList.getItems().clear();
 
-        for (String contact : clientOBS.getContactList()) {
+        for (String contact : clientManager.getContactList()) {
             usersList.getItems().add(contact);
         }
 
-        for (MessageList message : clientOBS.getMessageList()) {
+        for (MessageList message : clientManager.getMessageList()) {
             conversationList.getItems().add(message.message);
         }
 

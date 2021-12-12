@@ -1,19 +1,17 @@
 package Text;
-import Data.Client;
-import SharedClasses.*;
+import Data.ClientStartup;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Scanner;
 
 public class TextUserInterface {
 
-    private Client client;
+    private ClientStartup client;
     ObjectOutputStream oout; //enviar
     ObjectInputStream oin; //receber
 
-    public TextUserInterface(Client c) {
+    public TextUserInterface(ClientStartup c) {
         client = c;
     }
 
