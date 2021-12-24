@@ -43,12 +43,12 @@ public class ProcessClientMessagesTCP extends Thread {
 
                 if (obj instanceof RegisterMessageTCP) { //Processa Registo
                     System.out.println("cheguei RegisterMessageTCP. Recebi: ");
-                    System.out.println("Username: " + ((LoginMessageTCP) obj).getUsername());
+                    System.out.println("Username: " + ((RegisterMessageTCP) obj).getUsername());
                     rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((RegisterMessageTCP) obj).getUsername() + "\");");
                     rs.next();
                     if(!rs.getBoolean(1)){ //se não encontrou, pode registar
                         stmt.executeUpdate("INSERT INTO utilizador VALUES (\"" + ((RegisterMessageTCP) obj).getUsername() + "\", \"" + ((RegisterMessageTCP) obj).getNome() + "\", \"" + ((RegisterMessageTCP) obj).getPassword() + "\", 0, current_timestamp())");
-                    } //TODO NÃO TESTADO - nem foi criado ainda no CliOBS para enviar
+                    }
                     ((RegisterMessageTCP) obj).setRegistered(rs.getBoolean(1));
                     oout.writeObject(obj);
                     oout.flush();

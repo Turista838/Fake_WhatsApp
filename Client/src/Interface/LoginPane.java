@@ -1,13 +1,17 @@
 package Interface;
 
 import Data.ClientManager;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import static Data.ClientManager.VIEW_CHANGED;
 
@@ -15,7 +19,8 @@ public class LoginPane extends BorderPane {
 
     private ClientManager clientManager;
 
-    private Text title, usernameText, passwordText, registerText;
+    private Text title, usernameText, passwordText;
+    private TextFlow registerText;
     private TextField usernameField, passwordField;
     private Button loginButton;
 
@@ -34,7 +39,8 @@ public class LoginPane extends BorderPane {
         title = new Text("Fake Whatsapp");
         usernameText = new Text("Username");
         passwordText = new Text("Password");
-        registerText = new Text("Clique aqui para Registar");
+        Hyperlink createAccount   = showRegisterDialog(clientManager);
+        registerText = new TextFlow( new Text("Ainda não tem conta?"), createAccount );
         usernameField = new TextField();
         passwordField = new TextField();
         loginButton = new Button("Login");
@@ -55,8 +61,6 @@ public class LoginPane extends BorderPane {
         titleBox.getChildren().add(title);
         titleBox.setAlignment(Pos.CENTER);
 
-
-
         usernameBox.getChildren().addAll(usernameText, usernameField);
         passwordBox.getChildren().addAll(passwordText, passwordField);
         loginBox.getChildren().add(loginButton);
@@ -72,6 +76,26 @@ public class LoginPane extends BorderPane {
                 CornerRadii.EMPTY,
                 Insets.EMPTY))); //TODO apagar (debug)
     }
+
+    private Hyperlink showRegisterDialog(ClientManager clientManager) {
+        Hyperlink register = new Hyperlink("Carregue aqui para registar");
+
+        register.setOnAction(event -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new RegisterDialog(clientManager),200, 200));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            //stage.setX(primaryStage.getX()+200+Math.random()*100);
+            //stage.setY(primaryStage.getY()+200+Math.random()*100);
+            stage.setResizable(false);
+            //stage.setOnCloseRequest(ev -> Platform.exit());
+            stage.show();
+        });
+
+        return register;
+    }
+
+
+
 
     private void update() {
         this.setVisible(!clientManager.getLoggedIn());

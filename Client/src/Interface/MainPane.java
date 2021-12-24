@@ -5,6 +5,7 @@ import SharedClasses.Data.MessageList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -12,15 +13,19 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import static Data.ClientManager.VIEW_CHANGED;
 
 public class MainPane extends BorderPane {
 
     private ClientManager clientManager;
+
+    private String selectedContact;
+
     private ListView usersList;
     private ListView conversationList;
-    private String selectedContact;
 
     private Text username;
     private Text messageText;
@@ -37,6 +42,7 @@ public class MainPane extends BorderPane {
     private Button joinGroupButton;
     private Button createGroupButton;
     private Button editProfileButton;
+    private Button pendingInvitesButton;
 
     private Button removeUserButton;
     private Button leaveGroupButton;
@@ -62,6 +68,7 @@ public class MainPane extends BorderPane {
         joinGroupButton = new Button("Join Group");
         createGroupButton = new Button("Create Group");
         editProfileButton = new Button("Edit Profile");
+        pendingInvitesButton = new Button("Pending Invites");
 
         //Bottom Buttons
         removeUserButton = new Button("Remove User");
@@ -82,7 +89,7 @@ public class MainPane extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
-        menuBox.getChildren().addAll(username, addUserButton, joinGroupButton, createGroupButton, editProfileButton);
+        menuBox.getChildren().addAll(username, addUserButton, joinGroupButton, createGroupButton, editProfileButton, pendingInvitesButton);
         menuBox.setAlignment(Pos.TOP_CENTER);
         setTop(menuBox);
         menuBox.setPadding(new Insets(10, 10, 10, 10));
@@ -109,6 +116,60 @@ public class MainPane extends BorderPane {
         //writeMessageBox.setTranslateX(247.5);
         writeMessageBox.setPadding(new Insets(10, 10, 10, 10));
 
+        addUserButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new AddUserDialog(clientManager),400, 280));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Add User");
+            stage.show();
+        });
+
+        joinGroupButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new JoinGroupDialog(clientManager),400, 280));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Join Group");
+            stage.show();
+        });
+
+        createGroupButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new CreateGroupDialog(clientManager),300, 100));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Create Group");
+            stage.show();
+        });
+
+        editProfileButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new EditProfileDialog(clientManager),400, 180));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Edit Profile");
+            stage.show();
+        });
+
+        pendingInvitesButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new PendingInvitesDialog(clientManager),400, 280));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Pending Invites");
+            stage.show();
+        });
+
+        editGroupButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new EditGroupDialog(clientManager),400, 280));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Edit Group");
+            stage.show();
+        });
+
         sendMessageButton.setOnAction(ev -> {
             if(!messageTextField.getText().isEmpty()) {
                 if (clientManager.getContactIsGroup()) {
@@ -119,17 +180,15 @@ public class MainPane extends BorderPane {
             }
         });
 
-        usersList.setOnMouseClicked(new EventHandler<MouseEvent>() { //clique nos contactos faz update da conversa desse contacto
-            @Override
-            public void handle(MouseEvent event) {
-                selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
-                if(selectedContact.substring(selectedContact.length() - 1).equals("*")){ //remover o *
-                    clientManager.removeAsterisk(selectedContact);
-                    selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
-                }
-                clientManager.setSelectedContact(selectedContact);
-                clientManager.requestMessages();
+        //clique nos contactos faz update da conversa desse contacto
+        usersList.setOnMouseClicked(event -> {
+            selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
+            if(selectedContact.substring(selectedContact.length() - 1).equals("*")){ //remover o *
+                clientManager.removeAsterisk(selectedContact);
+                selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
             }
+            clientManager.setSelectedContact(selectedContact);
+            clientManager.requestMessages();
         });
 
 
@@ -151,8 +210,6 @@ public class MainPane extends BorderPane {
 
     }
 
-
-
     private void update() {
         this.setVisible(clientManager.getLoggedIn());
         username.setText(clientManager.getUsername());
@@ -166,7 +223,6 @@ public class MainPane extends BorderPane {
         for (MessageList message : clientManager.getMessageList()) {
             conversationList.getItems().add(message.message);
         }
-
     }
 
 }

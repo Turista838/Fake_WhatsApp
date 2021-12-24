@@ -43,7 +43,7 @@ public class ClientManager extends Thread {
     }
 
     public void run(){
-        while(true){
+        while (true) {
             try {
 
                 Object obj = oin.readObject();
@@ -52,42 +52,36 @@ public class ClientManager extends Thread {
                     return;
                 }
 
+//                if (obj instanceof RegisterMessageTCP) { //Actualiza mensagens
+//                    RegisterMessageTCP registerMessageTCP = (RegisterMessageTCP)obj;
+//                    //TODO ...
+//                }
+
                 if (obj instanceof LoginMessageTCP) { //Actualiza mensagens
-                    LoginMessageTCP loginMessageTCP = (LoginMessageTCP)obj;
+                    LoginMessageTCP loginMessageTCP = (LoginMessageTCP) obj;
                     loggedIn = loginMessageTCP.getLoginStatus();
-                    System.out.println("entrei login message");
-                    if(loggedIn) {
+                    if (loggedIn) {
                         username = loginMessageTCP.getUsername();
                         updateContactList();
-                    }
-                    else{
-                        Alert alert = new Alert(Alert.AlertType.ERROR);
-                        alert.setTitle("Error Dialog");
-                        alert.setHeaderText("Look, an Error Dialog");
-                        alert.setContentText("Incorrect Username and/or Password");
-                        alert.showAndWait();
                     }
                 }
 
                 if (obj instanceof UpdateContactListTCP) { //Actualiza contactos
-                    UpdateContactListTCP updateContactListTCP = (UpdateContactListTCP)obj;
+                    UpdateContactListTCP updateContactListTCP = (UpdateContactListTCP) obj;
                     contactList = updateContactListTCP.getContactList();
                 }
 
                 if (obj instanceof UpdateMessageListTCP) { //Actualiza mensagens
                     UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) obj;
                     selectedContactIsGroup = updateMessageListTCP.getIsGroup();
-//                    System.out.println("selected contact: " + selectedContact);
-//                    System.out.println("getContact(): " +  updateMessageListTCP.getContact());
-                    if(Objects.equals(selectedContact, updateMessageListTCP.getContact())){
+                    if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
                         msgList = updateMessageListTCP.getMessageList();
-                    }
-                    else{
+                    } else { //cliente está a ver as mensagens de outro contacto
                         addAsterisk(updateMessageListTCP.getContact());
                     }
                 }
 
-                Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), evt-> {
+                Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), evt -> {
                     firePropertyChangeListener();
                 }));
                 timeline.setCycleCount(1);
@@ -120,12 +114,28 @@ public class ClientManager extends Thread {
 
     public boolean getContactIsGroup() { return selectedContactIsGroup; }
 
-    public void login(String username, String password) {
+    public void register(String name, String username, String password) {
+        try{
+            synchronized (oin) {
+            RegisterMessageTCP registerMessageTCP = new RegisterMessageTCP(name, username, password);
+            oout.writeObject(registerMessageTCP);
+            oout.flush();
+
+                Object obj = oin.readObject();
+                registerMessageTCP = (RegisterMessageTCP) obj;
+                System.out.println("Registei :" + registerMessageTCP.getRegisteredStatus());
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void login(String username, String password) { //TODO evitar no servidor que possa haver 2 logins com o mesmo utilizador
         try{
             LoginMessageTCP loginMessageTCP = new LoginMessageTCP(username, password);
             oout.writeObject(loginMessageTCP);
             oout.flush();
-        } catch (IOException /*| ClassNotFoundException*/ e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -135,19 +145,17 @@ public class ClientManager extends Thread {
             UpdateContactListTCP updateContactListTCP = new UpdateContactListTCP(getUsername());
             oout.writeObject(updateContactListTCP);
             oout.flush();
-        } catch (IOException /*| ClassNotFoundException */ e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void requestMessages() {
         try{
-//            if(selectedContact.substring(selectedContact.length() - 1).equals("*")) //remover o *
-//                removeAsterisk(selectedContact);
             UpdateMessageListTCP updateMessageListTCP = new UpdateMessageListTCP(username, selectedContact);
             oout.writeObject(updateMessageListTCP);
             oout.flush();
-        } catch (IOException /*| ClassNotFoundException*/ e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -157,7 +165,7 @@ public class ClientManager extends Thread {
             DirectMessageTCP directMessageTCP = new DirectMessageTCP(username, message, selectedContact);
             oout.writeObject(directMessageTCP);
             oout.flush();
-        } catch (IOException /*| ClassNotFoundException */e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -167,7 +175,7 @@ public class ClientManager extends Thread {
             GroupMessageTCP groupMessageTCP = new GroupMessageTCP(username, message, selectedContact);
             oout.writeObject(groupMessageTCP);
             oout.flush();
-        } catch (IOException /*| ClassNotFoundException */e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -198,3 +206,14 @@ public class ClientManager extends Thread {
     }
 
 }
+
+
+
+
+//                    else {
+//                        Alert alert = new Alert(Alert.AlertType.ERROR);
+//                        alert.setTitle("Error Dialog");
+//                        alert.setHeaderText("Look, an Error Dialog");
+//                        alert.setContentText("Incorrect Username and/or Password");
+//                        alert.showAndWait();
+//                    }
