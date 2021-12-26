@@ -1,6 +1,7 @@
 package Interface;
 
 import Data.ClientManager;
+import SharedClasses.Data.MessageList;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -8,6 +9,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+
+import static Data.ClientManager.VIEW_CHANGED;
 
 public class AddUserDialog extends BorderPane {
 
@@ -31,8 +34,18 @@ public class AddUserDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        clientManager.requestUserList();
+
+        clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
+
         addUserButton.setOnAction(ev -> { //TODO
             //clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
         });
+    }
+
+    private void update() {
+        for (String user : clientManager.getAvailableUsersList()) {
+            availableUsersList.getItems().add(user);
+        }
     }
 }

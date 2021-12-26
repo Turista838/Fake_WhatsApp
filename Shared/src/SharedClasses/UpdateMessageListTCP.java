@@ -13,6 +13,7 @@ public class UpdateMessageListTCP implements Serializable {
     private String username;
     private String contact;
     private Boolean isGroup;
+    private Boolean isAdmin;
     private ArrayList msgList;
 
     public UpdateMessageListTCP(String username, String contact){
@@ -47,5 +48,13 @@ public class UpdateMessageListTCP implements Serializable {
 
     public Boolean getIsGroup() {
         return isGroup;
+    }
+
+    public void setIsAdmin(Boolean admin) {
+        isAdmin = admin;
+    }
+
+    public Boolean getIsAdmin() {
+        return isAdmin;
     }
 }

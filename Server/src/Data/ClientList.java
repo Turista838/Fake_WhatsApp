@@ -25,4 +25,6 @@ public class ClientList {
         }
         return null;
     }
+
+    public ArrayList<ClientInfo> getArrayClientList() { return arrayClientList; }
 }

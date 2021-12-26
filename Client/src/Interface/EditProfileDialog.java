@@ -61,8 +61,9 @@ public class EditProfileDialog extends BorderPane {
         setCenter(mainBox);
 
 
-//        createButton.setOnAction(ev -> {
-////            clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
-//        });
+
+        editProfileButton.setOnAction(ev -> {
+            //clientManager.edit(nameField.getText(), usernameField.getText(), passwordField.getText());
+        });
     }
 }

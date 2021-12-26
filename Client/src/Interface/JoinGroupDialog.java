@@ -9,6 +9,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
+import static Data.ClientManager.VIEW_CHANGED;
+
 public class JoinGroupDialog extends BorderPane {
 
     ClientManager clientManager;
@@ -33,8 +35,18 @@ public class JoinGroupDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        clientManager.requestGroupList();
+
+        clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
+
         joinGroupButton.setOnAction(ev -> { //TODO
             //clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
         });
+    }
+
+    private void update() {
+        for (String user : clientManager.getAvailableGroupsList()) {
+            availableGroupsList.getItems().add(user);
+        }
     }
 }

@@ -163,7 +163,7 @@ public class MainPane extends BorderPane {
 
         editGroupButton.setOnAction(ev -> {
             Stage stage = new Stage();
-            stage.setScene(new Scene(new EditGroupDialog(clientManager),400, 280));
+            stage.setScene(new Scene(new EditGroupDialog(clientManager, selectedContact, stage),400, 280)); //selectedContact = group
             stage.initModality(Modality.NONE);
             stage.setResizable(false);
             stage.setTitle("Edit Group");

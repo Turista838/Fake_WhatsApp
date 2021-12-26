@@ -4,7 +4,6 @@ import SharedClasses.*;
 import SharedClasses.Data.MessageList;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.scene.control.Alert;
 import javafx.util.Duration;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -19,18 +18,35 @@ public class ClientManager extends Thread {
 
     private ClientStartup cs;
 
+    private String name;
+    private String username;
     private Boolean loggedIn = false;
     private Boolean selectedContactIsGroup = false;
-    private String selectedContact;
+    private Boolean selectedGroupIsAdmin = false;
+    private String selectedContact = "";
     private ArrayList<String> contactList;
     private ArrayList<MessageList> msgList;
-    private String username;
+    private ArrayList<String> availableUsersList;
+    private ArrayList<String> availableGroupsList;
+    private ArrayList<String> selectedGroupMembersList;
 
     private ObjectOutputStream oout; //enviar TCP
     private ObjectInputStream oin; //receber TCP
 
     private final PropertyChangeSupport propertyChangeSupport;
     public final static String VIEW_CHANGED = "View Changed";
+    public final static String LOGIN_FAILED = "Login Failed";
+    public final static String REGISTER_FAILED = "Register Failed";
+    public final static String REGISTER_SUCCESS = "Register Success";
+    public final static String FRIEND_REQUEST = "Friend Request";
+    public final static String GROUP_REQUEST = "Group Request";
+    public final static String VIEW_GROUP_MEMBERS = "View Users in Group";
+    public final static String EDIT_SUCCESSFUL = "Group name edited";
+    public final static String EDIT_NOT_SUCCESSFUL = "Group name not edites";
+    public final static String CREATING_SUCCESSFUL = "Group created";
+    public final static String CREATING_NOT_SUCCESSFUL = "Group nor created";
+    public final static String DELETING_SUCCESSFUL = "Group created";
+    public final static String EXCLUDING_SUCCESSFUL = "Group user excluded";
 
     public ClientManager(ClientStartup cs){
         this.cs = cs;
@@ -52,21 +68,48 @@ public class ClientManager extends Thread {
                     return;
                 }
 
-//                if (obj instanceof RegisterMessageTCP) { //Actualiza mensagens
-//                    RegisterMessageTCP registerMessageTCP = (RegisterMessageTCP)obj;
-//                    //TODO ...
-//                }
+                if (obj instanceof String) { //Única mensagem que não tem classe personalizada
+                    if(obj.equals("Update")) {
+                        updateContactList();
+                        requestMessages();
+                    }
+                }
+
+                if (obj instanceof RegisterMessageTCP) { //Actualiza mensagens
+                    RegisterMessageTCP registerMessageTCP = (RegisterMessageTCP)obj;
+                    System.out.println("Registado: " + registerMessageTCP.getRegisteredStatus());
+                    if(registerMessageTCP.getRegisteredStatus()){
+                        firePropertyChangeListener(REGISTER_SUCCESS);
+                    }
+                    else{
+                        firePropertyChangeListener(REGISTER_FAILED);
+                    }
+                }
 
                 if (obj instanceof LoginMessageTCP) { //Actualiza mensagens
                     LoginMessageTCP loginMessageTCP = (LoginMessageTCP) obj;
                     loggedIn = loginMessageTCP.getLoginStatus();
                     if (loggedIn) {
+                        name = loginMessageTCP.getName();
                         username = loginMessageTCP.getUsername();
                         updateContactList();
                     }
+                    else
+                        firePropertyChangeListener(LOGIN_FAILED);
                 }
 
-                if (obj instanceof UpdateContactListTCP) { //Actualiza contactos
+                if (obj instanceof RequestUsersOrGroupsTCP) { //Recebe users registados, grupos ou contactos que possam integrar um grupo
+                    RequestUsersOrGroupsTCP requestUsersOrGroupsTCP = (RequestUsersOrGroupsTCP) obj;
+                    if (requestUsersOrGroupsTCP.isRequestIsGroupList()) { //Cliente pediu Grupos
+                        availableGroupsList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                    }
+                    else{ //Cliente pediu Users
+                        availableUsersList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                    }
+
+                }
+
+                if (obj instanceof UpdateContactListTCP) { //Actualiza lista contactos
                     UpdateContactListTCP updateContactListTCP = (UpdateContactListTCP) obj;
                     contactList = updateContactListTCP.getContactList();
                 }
@@ -74,6 +117,7 @@ public class ClientManager extends Thread {
                 if (obj instanceof UpdateMessageListTCP) { //Actualiza mensagens
                     UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) obj;
                     selectedContactIsGroup = updateMessageListTCP.getIsGroup();
+                    selectedGroupIsAdmin = updateMessageListTCP.getIsAdmin();
                     if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
                         msgList = updateMessageListTCP.getMessageList();
                     } else { //cliente está a ver as mensagens de outro contacto
@@ -81,12 +125,36 @@ public class ClientManager extends Thread {
                     }
                 }
 
-                Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), evt -> {
-                    firePropertyChangeListener();
-                }));
-                timeline.setCycleCount(1);
-                timeline.play();
+                if (obj instanceof GroupManagementTCP) { //Actualiza Gestão de Grupo
+                    GroupManagementTCP groupManagementTCP = (GroupManagementTCP) obj;
+                    if(groupManagementTCP.isConsulting()){
+                        selectedGroupMembersList = groupManagementTCP.getgroupMembersList();
+                        firePropertyChangeListener(VIEW_GROUP_MEMBERS);
+                    }
+                    if(groupManagementTCP.isEditing()){
+                        if(groupManagementTCP.getEditingSuccess())
+                            firePropertyChangeListener(EDIT_SUCCESSFUL);
+                        else
+                            firePropertyChangeListener(EDIT_NOT_SUCCESSFUL);
+                    }
+                    if(groupManagementTCP.isCreating()){
+                        if(groupManagementTCP.getEditingSuccess())
+                            firePropertyChangeListener(CREATING_SUCCESSFUL);
+                        else
+                            firePropertyChangeListener(CREATING_NOT_SUCCESSFUL);
+                    }
+                    if(groupManagementTCP.isDeleting()){
+                        if(groupManagementTCP.getDeletingSuccess())
+                            firePropertyChangeListener(DELETING_SUCCESSFUL);
+                    }
+                    if(groupManagementTCP.isExcluding()){
+                        if(groupManagementTCP.getExcludingSuccess())
+                            firePropertyChangeListener(EXCLUDING_SUCCESSFUL);
+                    }
+                }
 
+                System.out.println("Disparei View Changed");
+                firePropertyChangeListener(VIEW_CHANGED);
 
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
@@ -98,11 +166,17 @@ public class ClientManager extends Thread {
         propertyChangeSupport.addPropertyChangeListener(propertyName, listener);
     }
 
-    private void firePropertyChangeListener() {
-        propertyChangeSupport.firePropertyChange(VIEW_CHANGED, null, null);
+    private void firePropertyChangeListener(String view) {
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(100), evt -> {
+            propertyChangeSupport.firePropertyChange(view, null, null);
+        }));
+        timeline.setCycleCount(1);
+        timeline.play();
     }
 
     public void setSelectedContact(String selectedContact) { this.selectedContact = selectedContact; }
+
+    public String getClientName() { return name; }
 
     public String getUsername() { return username; }
 
@@ -112,20 +186,22 @@ public class ClientManager extends Thread {
 
     public ArrayList<MessageList> getMessageList() { return msgList; }
 
+    public ArrayList<String> getAvailableUsersList() { return availableUsersList; }
+
+    public ArrayList<String> getAvailableGroupsList() { return availableGroupsList; }
+
+    public ArrayList<String> getSelectedGroupMembersList() { return selectedGroupMembersList; }
+
     public boolean getContactIsGroup() { return selectedContactIsGroup; }
+
+    public boolean getSelectedGroupIsAdmin() { return selectedGroupIsAdmin; }
 
     public void register(String name, String username, String password) {
         try{
-            synchronized (oin) {
             RegisterMessageTCP registerMessageTCP = new RegisterMessageTCP(name, username, password);
             oout.writeObject(registerMessageTCP);
             oout.flush();
-
-                Object obj = oin.readObject();
-                registerMessageTCP = (RegisterMessageTCP) obj;
-                System.out.println("Registei :" + registerMessageTCP.getRegisteredStatus());
-            }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -180,8 +256,88 @@ public class ClientManager extends Thread {
         }
     }
 
+    public void requestUserList() {
+        try{
+            RequestUsersOrGroupsTCP requestUsersOrGroupsTCP = new RequestUsersOrGroupsTCP(username, false);
+            oout.writeObject(requestUsersOrGroupsTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public void addAsterisk(String contact) {
+    public void requestGroupList() {
+        try{
+            RequestUsersOrGroupsTCP requestUsersOrGroupsTCP = new RequestUsersOrGroupsTCP(username, true);
+            oout.writeObject(requestUsersOrGroupsTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void createGroup(String groupName) {
+        try{
+            GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
+            groupManagementTCP.setCreating(true);
+            oout.writeObject(groupManagementTCP);
+            oout.flush();
+            updateContactList();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void editGroupName(String groupName, String newGroupName) {
+        try{
+            GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
+            groupManagementTCP.setEditing(true);
+            groupManagementTCP.setNewGroupName(newGroupName);
+            oout.writeObject(groupManagementTCP);
+            oout.flush();
+            updateContactList();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void banUserFromGroup(String groupName, String selectedUser) {
+        try{
+            GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
+            groupManagementTCP.setExcluding(true);
+            groupManagementTCP.setSelectedUsername(selectedUser);
+            oout.writeObject(groupManagementTCP);
+            oout.flush();
+            requestGroupMembersList(groupName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteGroup(String groupName) {
+        try{
+            GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
+            groupManagementTCP.setDeleting(true);
+            oout.writeObject(groupManagementTCP);
+            oout.flush();
+            updateContactList();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void requestGroupMembersList(String groupName) {
+        try{
+            GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
+            groupManagementTCP.setConsulting(true);
+            oout.writeObject(groupManagementTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addAsterisk(String contact) { //TODO meter cores em vez de asteriscos
         String temp;
         for(int i = 0; i < contactList.size(); i++){
             if(Objects.equals(contactList.get(i), contact)){
@@ -206,14 +362,3 @@ public class ClientManager extends Thread {
     }
 
 }
-
-
-
-
-//                    else {
-//                        Alert alert = new Alert(Alert.AlertType.ERROR);
-//                        alert.setTitle("Error Dialog");
-//                        alert.setHeaderText("Look, an Error Dialog");
-//                        alert.setContentText("Incorrect Username and/or Password");
-//                        alert.showAndWait();
-//                    }

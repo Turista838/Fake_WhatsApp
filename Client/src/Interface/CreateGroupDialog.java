@@ -2,6 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -44,7 +45,14 @@ public class CreateGroupDialog extends BorderPane {
 
 
         createButton.setOnAction(ev -> {
-//            clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
+            if(groupNameField.getText().isEmpty()){
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Group creation Failed");
+                alert.setHeaderText("Group name cannot be empty or there is already a Group with that name");
+                alert.show();
+            }
+            else
+                clientManager.createGroup(groupNameField.getText());
         });
     }
 }

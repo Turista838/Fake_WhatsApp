@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class LoginMessageTCP implements Serializable {
 
     public static final long serialVersionID = 6;
+    private String name;
     private String username;
     private String password;
     private boolean connected;
@@ -13,6 +14,10 @@ public class LoginMessageTCP implements Serializable {
         this.username = username;
         this.password = password;
         connected = false;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setUsername(String username) {
@@ -24,6 +29,10 @@ public class LoginMessageTCP implements Serializable {
     }
 
     public void setConnected(boolean connected) { this.connected = connected; }
+
+    public String getName() {
+        return name;
+    }
 
     public String getUsername() {
         return username;

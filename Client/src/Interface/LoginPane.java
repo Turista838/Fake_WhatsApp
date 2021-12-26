@@ -13,7 +13,7 @@ import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import static Data.ClientManager.VIEW_CHANGED;
+import static Data.ClientManager.*;
 
 public class LoginPane extends BorderPane {
 
@@ -72,6 +72,8 @@ public class LoginPane extends BorderPane {
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
+        clientManager.addPropertyChangeListener(LOGIN_FAILED, evt->loginFailed());
+
         titleBox.setBackground(new Background(new BackgroundFill(Color.LIGHTCYAN,
                 CornerRadii.EMPTY,
                 Insets.EMPTY))); //TODO apagar (debug)
@@ -94,11 +96,15 @@ public class LoginPane extends BorderPane {
         return register;
     }
 
-
-
-
     private void update() {
         this.setVisible(!clientManager.getLoggedIn());
+    }
+
+    private void loginFailed() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Login Failed");
+        alert.setHeaderText("Incorrect username and/or password");
+        alert.show();
     }
 
 }
