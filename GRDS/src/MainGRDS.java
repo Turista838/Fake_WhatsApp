@@ -58,6 +58,14 @@ public class MainGRDS {
                         ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(socket, packet, (GRDSServerMessageUDP) obj);
                         processServerMessages.start();
                     }
+                    if(obj instanceof String){
+                        String msgRecebida=(String)oin.readObject();
+                        if (msgRecebida.compareTo("tcpPort")==0){
+                            System.out.println("Recebido o ping do servidor Porto:"+packet.getPort()+" IP:"+packet.getAddress().getHostAddress()+
+                            " Porto de escuta TCP:"+packet.getPort());
+                        }
+                    }
+
                 }
                 catch(IOException e){
                     System.out.println("Erro enquanto aguarda por um pedido");
