@@ -61,6 +61,14 @@ public class MainGRDS {
                                 serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
                         }
                     }
+                    if(obj instanceof String){
+                        String msgRecebida=(String)oin.readObject();
+                        if (msgRecebida.compareTo("tcpPort")==0){
+                            System.out.println("Recebido o ping do servidor Porto:"+packet.getPort()+" IP:"+packet.getAddress().getHostAddress()+
+                            " Porto de escuta TCP:"+packet.getPort());
+                        }
+                    }
+
                 }
                 catch(IOException e){
                     System.out.println("Erro enquanto aguarda por um pedido");
