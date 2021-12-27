@@ -2,17 +2,14 @@ package Interface;
 
 import Data.ClientManager;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.TouchPoint;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import static Data.ClientManager.*;
@@ -79,17 +76,17 @@ public class EditGroupDialog extends BorderPane {
 
         clientManager.addPropertyChangeListener(VIEW_GROUP_MEMBERS, evt->requestGroupUsers());
 
-        clientManager.addPropertyChangeListener(EDIT_SUCCESSFUL, evt->editSuccess());
+        clientManager.addPropertyChangeListener(GROUP_EDIT_SUCCESSFUL, evt->editSuccess());
 
-        clientManager.addPropertyChangeListener(EDIT_NOT_SUCCESSFUL, evt->editFailed());
+        clientManager.addPropertyChangeListener(GROUP_EDIT_NOT_SUCCESSFUL, evt->editFailed());
 
-        clientManager.addPropertyChangeListener(CREATING_SUCCESSFUL, evt->creatingSuccess());
+        clientManager.addPropertyChangeListener(GROUP_CREATING_SUCCESSFUL, evt->creatingSuccess());
 
-        clientManager.addPropertyChangeListener(CREATING_NOT_SUCCESSFUL, evt->creatingFailed());
+        clientManager.addPropertyChangeListener(GROUP_CREATING_NOT_SUCCESSFUL, evt->creatingFailed());
 
-        clientManager.addPropertyChangeListener(DELETING_SUCCESSFUL, evt->deletingSuccess(stage));
+        clientManager.addPropertyChangeListener(GROUP_DELETING_SUCCESSFUL, evt->deletingSuccess(stage));
 
-        clientManager.addPropertyChangeListener(EXCLUDING_SUCCESSFUL, evt->excludingSuccess());
+        clientManager.addPropertyChangeListener(GROUP_EXCLUDING_SUCCESSFUL, evt->excludingSuccess());
 
     }
 

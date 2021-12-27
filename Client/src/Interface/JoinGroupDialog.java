@@ -2,6 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -9,7 +10,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import static Data.ClientManager.VIEW_CHANGED;
+import static Data.ClientManager.*;
 
 public class JoinGroupDialog extends BorderPane {
 
@@ -39,14 +40,23 @@ public class JoinGroupDialog extends BorderPane {
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
-        joinGroupButton.setOnAction(ev -> { //TODO
-            //clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
+        clientManager.addPropertyChangeListener(GROUP_REQUEST, evt->groupRequestSent());
+
+        joinGroupButton.setOnAction(ev -> {
+            String selectedGroup = (String) availableGroupsList.getSelectionModel().getSelectedItem();
+            clientManager.joinGroup(selectedGroup);
         });
     }
 
     private void update() {
-        for (String user : clientManager.getAvailableGroupsList()) {
-            availableGroupsList.getItems().add(user);
+        for (String group : clientManager.getAvailableGroupsList()) {
+            availableGroupsList.getItems().add(group);
         }
+    }
+
+    private void groupRequestSent() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Friend Request Sent");
+        alert.show();
     }
 }

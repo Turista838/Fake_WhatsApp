@@ -15,11 +15,13 @@ public class UpdateMessageListTCP implements Serializable {
     private Boolean isGroup;
     private Boolean isAdmin;
     private ArrayList msgList;
+    private ArrayList contactsWithUnreadMessages;
 
     public UpdateMessageListTCP(String username, String contact){
         this.username = username;
         this.contact = contact;
         msgList = new ArrayList<MessageList>();
+        contactsWithUnreadMessages = new ArrayList<String>();
     }
 
     public void setUsername(String username) { this.username = username; }
@@ -38,9 +40,15 @@ public class UpdateMessageListTCP implements Serializable {
         msgList.add(new MessageList(message, timestamp, seen, file));
     }
 
+    public void addContactsWithUnreadMessages(String contact) {
+        contactsWithUnreadMessages.add(contact);
+    }
+
     public ArrayList getMessageList() {
         return msgList;
     }
+
+    public ArrayList getContactsWithUnreadMessages() { return contactsWithUnreadMessages; }
 
     public void setIsGroup(Boolean group) {
         isGroup = group;

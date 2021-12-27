@@ -3,6 +3,7 @@ package Interface;
 import Data.ClientManager;
 import SharedClasses.Data.MessageList;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -10,6 +11,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
+import static Data.ClientManager.FRIEND_REQUEST;
 import static Data.ClientManager.VIEW_CHANGED;
 
 public class AddUserDialog extends BorderPane {
@@ -38,14 +40,26 @@ public class AddUserDialog extends BorderPane {
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
-        addUserButton.setOnAction(ev -> { //TODO
-            //clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
+        clientManager.addPropertyChangeListener(FRIEND_REQUEST, evt->friendRequestSent());
+
+        addUserButton.setOnAction(ev -> {
+            String selectedUser = (String) availableUsersList.getSelectionModel().getSelectedItem();
+            if(selectedUser != null)
+                clientManager.addUser(selectedUser);
         });
     }
 
     private void update() {
+        availableUsersList.getItems().clear();
         for (String user : clientManager.getAvailableUsersList()) {
             availableUsersList.getItems().add(user);
         }
+    }
+
+    private void friendRequestSent() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Friend Request Sent");
+        alert.setHeaderText("Request Sent");
+        alert.show();
     }
 }

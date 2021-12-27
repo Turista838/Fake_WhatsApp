@@ -1,55 +1,61 @@
 package UDP;
 
+import Data.ServerInfo;
 import Data.ServerList;
 import SharedClasses.GRDSServerMessageUDP;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ProcessServerMessagesUDP extends Thread {
 
     private static final int MAX_SIZE = 10000;
-    private DatagramSocket socket;
-    private DatagramPacket packet;
-    private GRDSServerMessageUDP serverMessageUDP;
+    private ServerList serverList;
+    private ArrayList<String> clientsAffectedBySGBDChanges;
+    private  String message;
 
 
-    public ProcessServerMessagesUDP(DatagramSocket socket, DatagramPacket packet, GRDSServerMessageUDP serverMessageUDP){
-        this.socket = socket;
-        this.packet = packet;
-        this.serverMessageUDP = serverMessageUDP;
+    public ProcessServerMessagesUDP(ServerList serverList, ArrayList<String> clientsAffectedBySGBDChanges, String message) {
+        this.serverList = serverList;
+        this.clientsAffectedBySGBDChanges = clientsAffectedBySGBDChanges;
+        this.message = message;
     }
 
     public void run(){
 
-        serverMessageUDP.testMsg = "O GDRS enviou esta classe";
-
         try {
+            System.out.println("Servidor enviou uma mensagem para transmitir a todos os servidores");
 
-            ByteArrayOutputStream bout  = new ByteArrayOutputStream();
-            ObjectOutputStream oout = new ObjectOutputStream(bout);
+            for(ServerInfo serverInfo : serverList.arrayServerList){
 
-            oout.writeObject(serverMessageUDP);
-            oout.flush(); //opcional
+                InetAddress serverAddr = null;
+                String serverIP = serverInfo.getServerIP();
+                int serverPort = serverInfo.getServerPort();
 
-            packet.setData(bout.toByteArray());
-            packet.setLength(bout.size());
+                serverAddr = InetAddress.getByName(serverIP);
+                DatagramSocket socketUDP = new DatagramSocket();
 
-            socket.send(packet);
+                ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                ObjectOutputStream oout = new ObjectOutputStream(bout);
+
+                GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true);
+                grdsServerMessageUDP.setClientsAffectedBySGBDChanges(clientsAffectedBySGBDChanges);
+                grdsServerMessageUDP.setMessage(message);
+                oout.writeUnshared(grdsServerMessageUDP);
+
+                //send
+                DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), serverAddr, serverPort);
+                socketUDP.send(packetUDP);
+            }
 
 
-        } catch (IOException e) { //TODO melhorar try catch
+        } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
-
-
     }
 
 }

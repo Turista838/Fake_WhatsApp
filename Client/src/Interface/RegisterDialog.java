@@ -57,6 +57,7 @@ public class RegisterDialog extends BorderPane {
     private void registerSuccess() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Successfully Registered");
+        alert.setHeaderText("User " + usernameField.getText() + " successfully registered");
         alert.show();
     }
 

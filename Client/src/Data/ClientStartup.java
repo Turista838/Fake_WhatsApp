@@ -80,7 +80,7 @@ public class ClientStartup {
         }
     }
 
-    public void connectServer(String serverIP, int serverPort) { //TODO talvez mudar esta conecção para outra classe
+    public void connectServer(String serverIP, int serverPort) {
 
         try{
 

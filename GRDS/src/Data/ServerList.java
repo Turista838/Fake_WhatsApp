@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class ServerList {
 
-    ArrayList<ServerInfo> arrayServerList;
+    public ArrayList<ServerInfo> arrayServerList;
 
     public ServerList(){
         arrayServerList = new ArrayList<ServerInfo>();
@@ -33,8 +33,6 @@ public class ServerList {
             if(svInfo.getServerIP().equals(hostAddress) && svInfo.getServerPort() == port)
                 svInfo.updateTime();
         }
-        //TODO Passados três períodos (20 em 20 segundos) sem receção de mensagens de um determinado servidor, este é “esquecido” pelo GRDS;
-        //TODO isto provavelmente é uma thread à parte que adormece de 20 em 20 segundos
     }
 
     public String[] returnAvailableServer() {

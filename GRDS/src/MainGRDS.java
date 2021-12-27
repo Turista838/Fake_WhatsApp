@@ -51,12 +51,15 @@ public class MainGRDS {
                         processClientMessages.start();
                     }
                     if(obj instanceof GRDSServerMessageUDP){ //estes serverList deviam estar contido num mutex?
-                        System.out.println("Porto do servidor: " + packet.getPort());
-                        if(!serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort())) //se já estava na lista: update time
-                            serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
-                        //pode não ser necessário resposta (não sei)
-                        ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(socket, packet, (GRDSServerMessageUDP) obj);
-                        processServerMessages.start();
+                        if(((GRDSServerMessageUDP) obj).isUpdateBDconnection()){
+                            ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(serverList, ((GRDSServerMessageUDP) obj).getClientsAffectedBySGBDChanges(), ((GRDSServerMessageUDP) obj).getMessage());
+                            processServerMessages.start();
+                        }
+                        else {
+                            System.out.println("Porto do servidor: " + packet.getPort());
+                            if (!serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort()))
+                                serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
+                        }
                     }
                 }
                 catch(IOException e){

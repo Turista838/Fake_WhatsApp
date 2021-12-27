@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -29,6 +30,8 @@ public class ClientManager extends Thread {
     private ArrayList<String> availableUsersList;
     private ArrayList<String> availableGroupsList;
     private ArrayList<String> selectedGroupMembersList;
+    private ArrayList<String> pendingInvitesListUsers;
+    private HashMap pendingInvitesListGroups;
 
     private ObjectOutputStream oout; //enviar TCP
     private ObjectInputStream oin; //receber TCP
@@ -40,13 +43,16 @@ public class ClientManager extends Thread {
     public final static String REGISTER_SUCCESS = "Register Success";
     public final static String FRIEND_REQUEST = "Friend Request";
     public final static String GROUP_REQUEST = "Group Request";
+    public final static String UPDATE_REQUESTS = "Update Requests";
     public final static String VIEW_GROUP_MEMBERS = "View Users in Group";
-    public final static String EDIT_SUCCESSFUL = "Group name edited";
-    public final static String EDIT_NOT_SUCCESSFUL = "Group name not edites";
-    public final static String CREATING_SUCCESSFUL = "Group created";
-    public final static String CREATING_NOT_SUCCESSFUL = "Group nor created";
-    public final static String DELETING_SUCCESSFUL = "Group created";
-    public final static String EXCLUDING_SUCCESSFUL = "Group user excluded";
+    public final static String GROUP_EDIT_SUCCESSFUL = "Group name edited";
+    public final static String GROUP_EDIT_NOT_SUCCESSFUL = "Group name not edites";
+    public final static String GROUP_CREATING_SUCCESSFUL = "Group created";
+    public final static String GROUP_CREATING_NOT_SUCCESSFUL = "Group nor created";
+    public final static String GROUP_DELETING_SUCCESSFUL = "Group created";
+    public final static String GROUP_EXCLUDING_SUCCESSFUL = "Group user excluded";
+    public final static String USER_EDIT_SUCCESSFUL = "User name edited";
+    public final static String USER_EDIT_NOT_SUCCESSFUL = "User name not edited";
 
     public ClientManager(ClientStartup cs){
         this.cs = cs;
@@ -69,8 +75,12 @@ public class ClientManager extends Thread {
                 }
 
                 if (obj instanceof String) { //Única mensagem que não tem classe personalizada
-                    if(obj.equals("Update")) {
+                    if(obj.equals("Update Contacts")) {
+                        System.out.println("Recebi STRING Update Contacts");
                         updateContactList();
+                    }
+                    if(obj.equals("Update Message")) {
+                        System.out.println("Recebi STRING Update Message");
                         requestMessages();
                     }
                 }
@@ -93,6 +103,7 @@ public class ClientManager extends Thread {
                         name = loginMessageTCP.getName();
                         username = loginMessageTCP.getUsername();
                         updateContactList();
+                        requestMessages();
                     }
                     else
                         firePropertyChangeListener(LOGIN_FAILED);
@@ -100,17 +111,24 @@ public class ClientManager extends Thread {
 
                 if (obj instanceof RequestUsersOrGroupsTCP) { //Recebe users registados, grupos ou contactos que possam integrar um grupo
                     RequestUsersOrGroupsTCP requestUsersOrGroupsTCP = (RequestUsersOrGroupsTCP) obj;
-                    if (requestUsersOrGroupsTCP.isRequestIsGroupList()) { //Cliente pediu Grupos
-                        availableGroupsList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                    if(requestUsersOrGroupsTCP.isRequestIsPendingInvites()){
+                        pendingInvitesListUsers = requestUsersOrGroupsTCP.getFriendsRequests();
+                        pendingInvitesListGroups = requestUsersOrGroupsTCP.getGroupsRequests();
+                        firePropertyChangeListener(UPDATE_REQUESTS);
                     }
-                    else{ //Cliente pediu Users
-                        availableUsersList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                    else{
+                        if (requestUsersOrGroupsTCP.isRequestIsGroupList()) { //Cliente pediu Grupos
+                            availableGroupsList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                        }
+                        else{ //Cliente pediu Users
+                            availableUsersList = requestUsersOrGroupsTCP.getUserOrGroupList();
+                        }
                     }
-
                 }
 
                 if (obj instanceof UpdateContactListTCP) { //Actualiza lista contactos
                     UpdateContactListTCP updateContactListTCP = (UpdateContactListTCP) obj;
+                    System.out.println("Sou " + username + " e cheguei aqui");
                     contactList = updateContactListTCP.getContactList();
                 }
 
@@ -118,11 +136,14 @@ public class ClientManager extends Thread {
                     UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) obj;
                     selectedContactIsGroup = updateMessageListTCP.getIsGroup();
                     selectedGroupIsAdmin = updateMessageListTCP.getIsAdmin();
-                    if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
-                        msgList = updateMessageListTCP.getMessageList();
-                    } else { //cliente está a ver as mensagens de outro contacto
-                        addAsterisk(updateMessageListTCP.getContact());
+                    System.out.println("selected contact: " + selectedContact);
+                    System.out.println("updateMessageListTCP.getContact(): " + updateMessageListTCP.getContact());
+                    if(!selectedContact.isEmpty()) {
+                        if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
+                            msgList = updateMessageListTCP.getMessageList();
+                        }
                     }
+                    addAsterisk(((UpdateMessageListTCP) obj).getContactsWithUnreadMessages());
                 }
 
                 if (obj instanceof GroupManagementTCP) { //Actualiza Gestão de Grupo
@@ -133,24 +154,55 @@ public class ClientManager extends Thread {
                     }
                     if(groupManagementTCP.isEditing()){
                         if(groupManagementTCP.getEditingSuccess())
-                            firePropertyChangeListener(EDIT_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_EDIT_SUCCESSFUL);
                         else
-                            firePropertyChangeListener(EDIT_NOT_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_EDIT_NOT_SUCCESSFUL);
                     }
                     if(groupManagementTCP.isCreating()){
                         if(groupManagementTCP.getEditingSuccess())
-                            firePropertyChangeListener(CREATING_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_CREATING_SUCCESSFUL);
                         else
-                            firePropertyChangeListener(CREATING_NOT_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_CREATING_NOT_SUCCESSFUL);
                     }
                     if(groupManagementTCP.isDeleting()){
                         if(groupManagementTCP.getDeletingSuccess())
-                            firePropertyChangeListener(DELETING_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_DELETING_SUCCESSFUL);
                     }
                     if(groupManagementTCP.isExcluding()){
                         if(groupManagementTCP.getExcludingSuccess())
-                            firePropertyChangeListener(EXCLUDING_SUCCESSFUL);
+                            firePropertyChangeListener(GROUP_EXCLUDING_SUCCESSFUL);
                     }
+                }
+
+                if (obj instanceof UserManagementTCP) { //Edita perfil
+                    UserManagementTCP userManagementTCP = (UserManagementTCP) obj;
+                    if(userManagementTCP.getEditSuccessful())
+                        firePropertyChangeListener(USER_EDIT_SUCCESSFUL);
+                    else
+                        firePropertyChangeListener(USER_EDIT_NOT_SUCCESSFUL);
+                }
+
+                if (obj instanceof FriendOrGroupRequestTCP) { //Adicionou user ou grupo
+                    FriendOrGroupRequestTCP friendOrGroupRequestTCP = (FriendOrGroupRequestTCP) obj;
+                    if(friendOrGroupRequestTCP.getFriendRequest())
+                        availableUsersList.remove(friendOrGroupRequestTCP.getFriend());
+                    else
+                        availableGroupsList.remove(friendOrGroupRequestTCP.getGroup());
+                    requestUserList();
+                    firePropertyChangeListener(FRIEND_REQUEST);
+                }
+
+                if (obj instanceof AcceptOrRefuseRequestTCP) { //Adicionou user ou grupo
+                    AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = (AcceptOrRefuseRequestTCP) obj;
+                    //if(acceptOrRefuseRequestTCP.getAccept()){ //foi aceite
+                    if(acceptOrRefuseRequestTCP.getGroup()) //num grupo
+                        pendingInvitesListGroups.remove(acceptOrRefuseRequestTCP.getRequest());
+                    else //num contacto
+                        pendingInvitesListUsers.remove(acceptOrRefuseRequestTCP.getRequest());
+                    //}
+                    firePropertyChangeListener(UPDATE_REQUESTS);
+                    updateContactList();
+                    requestMessages();
                 }
 
                 System.out.println("Disparei View Changed");
@@ -158,6 +210,7 @@ public class ClientManager extends Thread {
 
             } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
+                return;
             }
         }
     }
@@ -191,6 +244,10 @@ public class ClientManager extends Thread {
     public ArrayList<String> getAvailableGroupsList() { return availableGroupsList; }
 
     public ArrayList<String> getSelectedGroupMembersList() { return selectedGroupMembersList; }
+
+    public ArrayList<String> getPendingInvitesListUsers() { return pendingInvitesListUsers; }
+
+    public HashMap getPendingInvitesListGroups() { return pendingInvitesListGroups; }
 
     public boolean getContactIsGroup() { return selectedContactIsGroup; }
 
@@ -276,6 +333,16 @@ public class ClientManager extends Thread {
         }
     }
 
+    public void requestPendingInvitesList() {
+        try{
+            RequestUsersOrGroupsTCP requestUsersOrGroupsTCP = new RequestUsersOrGroupsTCP(username);
+            oout.writeObject(requestUsersOrGroupsTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void createGroup(String groupName) {
         try{
             GroupManagementTCP groupManagementTCP = new GroupManagementTCP(username, groupName);
@@ -337,13 +404,113 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void addAsterisk(String contact) { //TODO meter cores em vez de asteriscos
+    public void editNameUsername(String newName, String newUsername, String password) {
+        if(newName.isEmpty()){
+            newName = name;
+        }
+        if(newUsername.isEmpty()){
+            newUsername = username;
+        }
+        try{
+            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password);
+            oout.writeObject(userManagementTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void editNameUsernamePassword(String newName, String newUsername, String password, String newPassword) {
+        if(newName.isEmpty()){
+            newName = name;
+        }
+        if(newUsername.isEmpty()){
+            newUsername = username;
+        }
+        try{
+            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password);
+            userManagementTCP.setNewPassword(newPassword);
+            userManagementTCP.setAlteringPassword(true);
+            oout.writeObject(userManagementTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addUser(String selectedUser) {
+        try{
+            FriendOrGroupRequestTCP friendOrGroupRequest = new FriendOrGroupRequestTCP(username);
+            friendOrGroupRequest.setFriend(selectedUser);
+            friendOrGroupRequest.setFriendRequest(true);
+            oout.writeObject(friendOrGroupRequest);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void joinGroup(String selectedGroup) {
+        try{
+            FriendOrGroupRequestTCP friendOrGroupRequest = new FriendOrGroupRequestTCP(username);
+            friendOrGroupRequest.setGroup(selectedGroup);
+            friendOrGroupRequest.setGroupRequest(true);
+            oout.writeObject(friendOrGroupRequest);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void acceptFriendRequest(String contact) {
+        try{
+            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, contact, false, true);
+            oout.writeObject(acceptOrRefuseRequestTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void acceptNewMember(String member) {
+        try{
+            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, member, true, true);
+            oout.writeObject(acceptOrRefuseRequestTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void refuseFriendRequest(String contact) {
+        try{
+            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, contact, false, false);
+            oout.writeObject(acceptOrRefuseRequestTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void refuseNewMember(String contact) {
+        try{
+            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, contact, true, false);
+            oout.writeObject(acceptOrRefuseRequestTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addAsterisk(ArrayList<String> contacts) { //TODO meter cores em vez de asteriscos
         String temp;
         for(int i = 0; i < contactList.size(); i++){
-            if(Objects.equals(contactList.get(i), contact)){
-                temp = contactList.get(i);
-                temp = temp + "*";
-                contactList.set(i, temp);
+            for(int j = 0; j < contacts.size(); j++){
+                if(Objects.equals(contactList.get(i), contacts.get(j))){
+                    temp = contactList.get(i);
+                    temp = temp + "*";
+                    contactList.set(i, temp);
+                }
             }
         }
     }
@@ -360,5 +527,6 @@ public class ClientManager extends Thread {
             }
         }
     }
+
 
 }

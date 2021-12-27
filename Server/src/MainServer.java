@@ -1,6 +1,7 @@
 import Data.ClientList;
 import SharedClasses.*;
 import TCP.ProcessClientMessagesTCP;
+import UDP.ProcessGRDSMessagesUDP;
 
 import java.io.*;
 import java.net.*;
@@ -19,8 +20,8 @@ public class MainServer {
 
         ClientList clientList = new ClientList();
         InetAddress gbdsAddr = null;
-        String gbdsIP;
-        String gbdsPort;
+        String grdsIP;
+        String grdsPort;
 
         ByteArrayOutputStream bout; //enviar
         ObjectOutputStream oout; //enviar
@@ -36,10 +37,9 @@ public class MainServer {
 
         MulticastSocket multicastSocket = null;
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP();
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false);
 
         Connection conn = null;
-        Statement stmt = null;
 
         try {
             Class.forName(JDBC_DRIVER);
@@ -49,7 +49,6 @@ public class MainServer {
 
         try{
             conn = DriverManager.getConnection(dbUrl, "root", "123456");
-            stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
         }
         catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -57,12 +56,12 @@ public class MainServer {
 
         if(args.length == 2){
 
-            gbdsIP = args[0]; //IP GRDS
-            gbdsPort = args[1]; //Porto GRDS
+            grdsIP = args[0]; //IP GRDS
+            grdsPort = args[1]; //Porto GRDS
 
             try{ //connectar ao GRDS UDP
 
-                gbdsAddr = InetAddress.getByName(gbdsIP);
+                gbdsAddr = InetAddress.getByName(grdsIP);
                 socketUDP = new DatagramSocket();
                 //socket.setSoTimeout(TIMEOUT*1000);
                 //encapsular a mensagem
@@ -70,23 +69,13 @@ public class MainServer {
                 oout = new ObjectOutputStream(bout);
                 oout.writeUnshared(grdsServerMessageUDP);
                 //send
-                packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, Integer.parseInt(gbdsPort));
+                packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, Integer.parseInt(grdsPort));
                 socketUDP.send(packetUDP);
-                //receive
-                packetUDP = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);
-                socketUDP.receive(packetUDP);
-                //deserializar o fluxo de bytes recebido
-                bin = new ByteArrayInputStream(packetUDP.getData(), 0, packetUDP.getLength());
-                oin = new ObjectInputStream(bin);
-                grdsServerMessageUDP = (GRDSServerMessageUDP)oin.readObject();
-                //TODO acho que o servidor tem de estar sempre atento porque pode vir mais mensagens do GRDS (tipo para irem à BD)
 
-                System.out.println("Sou servidor e recebi pelo UDP isto:");
-                System.out.println(grdsServerMessageUDP.testMsg);
+                ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList);
+                processGRDSMessagesUDP.start();
 
                 try{ //tratar de clientes TCP
-
-                    System.out.println(socketUDP.getLocalPort()); //TODO melhorar?
 
                     serverSocketTCP = new ServerSocket(socketUDP.getLocalPort());
 
@@ -95,14 +84,13 @@ public class MainServer {
                         try{
                             clientSocketTCP = serverSocketTCP.accept();
                             //clientSocketTCP.setSoTimeout(TIMEOUT);
-                            ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(clientSocketTCP, clientList, stmt);
+                            ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(clientSocketTCP, clientList, conn, grdsIP, grdsPort);
                             processClientMessagesTCP.start();
                         }
                         catch(IOException e){
                             System.out.println("Erro enquanto aguarda por um pedido");
                             return;
                         }
-                        System.out.println("cheguei aqui 2");
                     }
 
                 }catch(NumberFormatException e){

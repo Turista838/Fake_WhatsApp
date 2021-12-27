@@ -2,6 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -60,10 +61,24 @@ public class EditProfileDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
-
+        editNameField.setText(clientManager.getClientName());
+        editUsernameField.setText(clientManager.getUsername());
 
         editProfileButton.setOnAction(ev -> {
-            //clientManager.edit(nameField.getText(), usernameField.getText(), passwordField.getText());
+            if(!oldPassField.getText().isEmpty()) {
+                if (newPassField.getText().isEmpty()) {
+                    clientManager.editNameUsername(editNameField.getText(), editUsernameField.getText(), oldPassField.getText());
+                } else {
+                    clientManager.editNameUsernamePassword(editNameField.getText(), editUsernameField.getText(), oldPassField.getText(), newPassField.getText());
+                }
+            }
+            else{
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Failed to edit Profile");
+                alert.setHeaderText("You must enter your password");
+                alert.show();
+            }
+
         });
     }
 }
