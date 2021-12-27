@@ -8,6 +8,7 @@ public class AcceptOrRefuseRequestTCP implements Serializable {
 
     private String username;
     private String request;
+    private String groupName;
     private Boolean isGroup = false;
     private Boolean accept = false;
 
@@ -17,6 +18,10 @@ public class AcceptOrRefuseRequestTCP implements Serializable {
         this.isGroup = isGroup;
         this.accept = accept;
     }
+
+    public void setGroupName(String groupName) { this.groupName = groupName; }
+
+    public String getGroupName() { return groupName; }
 
     public String getUsername() { return username; }
 

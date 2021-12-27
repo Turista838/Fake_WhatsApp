@@ -472,9 +472,10 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void acceptNewMember(String member) {
+    public void acceptNewMember(String member, String groupName) {
         try{
             AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, member, true, true);
+            acceptOrRefuseRequestTCP.setGroupName(groupName);
             oout.writeObject(acceptOrRefuseRequestTCP);
             oout.flush();
         } catch (IOException e) {
@@ -492,9 +493,10 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void refuseNewMember(String contact) {
+    public void refuseNewMember(String member, String groupName) {
         try{
-            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, contact, true, false);
+            AcceptOrRefuseRequestTCP acceptOrRefuseRequestTCP = new AcceptOrRefuseRequestTCP(username, member, true, false);
+            acceptOrRefuseRequestTCP.setGroupName(groupName);
             oout.writeObject(acceptOrRefuseRequestTCP);
             oout.flush();
         } catch (IOException e) {

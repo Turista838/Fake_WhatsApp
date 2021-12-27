@@ -20,6 +20,7 @@ import static Data.ClientManager.VIEW_CHANGED;
 public class PendingInvitesDialog extends BorderPane {
 
     ClientManager clientManager;
+    HashMap<String, String> PendingInvitesListGroups;
 
     private Text title;
 
@@ -62,7 +63,7 @@ public class PendingInvitesDialog extends BorderPane {
             if(selectedRequest.contains("|User|")) //é um user
                 clientManager.acceptFriendRequest((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()));
             else //é um grupo
-                clientManager.acceptNewMember((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()));
+                clientManager.acceptNewMember((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()), PendingInvitesListGroups.get((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex())));
         });
 
         refuseButton.setOnAction(ev -> {
@@ -70,7 +71,7 @@ public class PendingInvitesDialog extends BorderPane {
             if(selectedRequest.contains("|User|")) //é um user
                 clientManager.refuseFriendRequest((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()));
             else //é um grupo
-                clientManager.refuseNewMember((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()));
+                clientManager.refuseNewMember((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex()), PendingInvitesListGroups.get((String) unformattedInvitesList.get(pendingInvitesList.getSelectionModel().getSelectedIndex())));
         });
     }
 
@@ -81,7 +82,7 @@ public class PendingInvitesDialog extends BorderPane {
             unformattedInvitesList.add(user);
             pendingInvitesList.getItems().add(user + "|User|");
         }
-        HashMap<String, String> PendingInvitesListGroups =  clientManager.getPendingInvitesListGroups();
+        PendingInvitesListGroups =  clientManager.getPendingInvitesListGroups();
         for (Map.Entry<String, String> entry : PendingInvitesListGroups.entrySet()) {
             String member = entry.getKey();
             String group = entry.getValue();

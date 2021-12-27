@@ -3,6 +3,7 @@ package TCP;
 import Data.ClientInfo;
 import Data.ClientList;
 import SharedClasses.*;
+import UDP.UpdateGRDSMessagesUDP;
 
 import java.io.*;
 import java.net.DatagramPacket;
@@ -95,9 +96,9 @@ public class ProcessClientMessagesTCP extends Thread {
                         while (rs.next()){ //query friends requests
                             ((RequestUsersOrGroupsTCP) obj).addFriendsRequests(rs.getString(1));
                         }
-                        rs = stmt.executeQuery("SELECT * FROM inclui WHERE Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE User_Admin = \"" + ((RequestUsersOrGroupsTCP) obj).getUsername() + "\") AND adicionado = 0;");
+                        rs = stmt.executeQuery("SELECT Grupo_ID_Grupo, Utilizador_Username, Nome FROM inclui LEFT JOIN grupo ON inclui.Grupo_ID_Grupo = grupo.ID_Grupo WHERE Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE User_Admin = \"" + ((RequestUsersOrGroupsTCP) obj).getUsername() + "\") AND adicionado = 0;");
                         while (rs.next()){ //query group requests
-                            ((RequestUsersOrGroupsTCP) obj).addGroupsRequests(rs.getString(2), rs.getString(1));
+                            ((RequestUsersOrGroupsTCP) obj).addGroupsRequests(rs.getString(2), rs.getString(3));
                         }
                     }
                     else {
@@ -251,7 +252,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         }
                         else{
                             stmt.executeUpdate("INSERT INTO grupo (Nome, User_Admin) VALUES (\"" + ((GroupManagementTCP)obj).getGroupName() + "\", \"" + ((GroupManagementTCP)obj).getUsername() + "\");");
-                            stmt.executeUpdate("INSERT INTO inclui values ((SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\"), \"" + ((GroupManagementTCP)obj).getUsername() + "\");");
+                            stmt.executeUpdate("INSERT INTO inclui values ((SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\"), \"" + ((GroupManagementTCP)obj).getUsername() + "\", 1);");
                             ((GroupManagementTCP)obj).setCreatingSuccess(true);
                         }
                         oout.writeObject(obj);
@@ -295,7 +296,7 @@ public class ProcessClientMessagesTCP extends Thread {
                 if (obj instanceof AcceptOrRefuseRequestTCP) { //Accept or Refuse Friend ou Group
                     if(((AcceptOrRefuseRequestTCP) obj).getAccept()) { //é para aceitar
                         if (((AcceptOrRefuseRequestTCP) obj).getGroup()) { //aceite num grupo
-                            //TODO foi aceite num grupo
+                            stmt.executeUpdate("UPDATE inclui SET Adicionado = 1 WHERE Utilizador_Username = \"" + ((AcceptOrRefuseRequestTCP) obj).getRequest() + "\" AND Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((AcceptOrRefuseRequestTCP) obj).getGroupName() + "\");");
                         } else { //aceite contacto
                             stmt.executeUpdate("DELETE FROM tem_o_contacto WHERE Username = \"" + ((AcceptOrRefuseRequestTCP) obj).getUsername() + "\" AND Contacto = \"" + ((AcceptOrRefuseRequestTCP) obj).getRequest() + "\";");
                             stmt.executeUpdate("DELETE FROM tem_o_contacto WHERE Username = \"" + ((AcceptOrRefuseRequestTCP) obj).getRequest() + "\" AND Contacto = \"" + ((AcceptOrRefuseRequestTCP) obj).getUsername() + "\";");
@@ -306,7 +307,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     }
                     else{ //é para recusar
                         if(((AcceptOrRefuseRequestTCP) obj).getGroup()){ //recusado num grupo
-                            //TODO foi recusado no grupo
+                            stmt.executeUpdate("DELETE inclui WHERE Utilizador_Username = \"" + ((AcceptOrRefuseRequestTCP) obj).getRequest() + "\" AND Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((AcceptOrRefuseRequestTCP) obj).getGroupName() + "\");");
                         }
                         else{ //recusado num contacto
                             stmt.executeUpdate("DELETE FROM tem_o_contacto WHERE Username = \"" + ((AcceptOrRefuseRequestTCP) obj).getUsername() + "\" AND Contacto = \"" + ((AcceptOrRefuseRequestTCP) obj).getRequest() + "\";");
@@ -320,9 +321,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     sendUpdateMessageToServerClients(UPDATE_CONTACTS, clientsAffectedBySGBDChanges);
                 }
 
-
                 clientsAffectedBySGBDChanges.clear();
-                //TODO enviar mensagens a ao GRDS a dizer que houve uma alteração na BD
 
             }
 
@@ -343,8 +342,7 @@ public class ProcessClientMessagesTCP extends Thread {
 
     private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges) {
 
-        if(!clientsAffectedBySGBDChanges.isEmpty())
-            sendUpdateToGRDS(message, clientsAffectedBySGBDChanges);
+        new UpdateGRDSMessagesUDP(grdsIP, grdsPort, message, clientsAffectedBySGBDChanges);
 
         ArrayList<ClientInfo> cList = clientList.getArrayClientList();
         for(ClientInfo c : cList){
@@ -360,25 +358,5 @@ public class ProcessClientMessagesTCP extends Thread {
         }
     }
 
-    private void sendUpdateToGRDS(String message, ArrayList clientsAffectedBySGBDChanges) {
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true);
-        grdsServerMessageUDP.setMessage(message);
-
-        try{
-            InetAddress gbdsAddr = InetAddress.getByName(grdsIP);
-            DatagramSocket socketUDP = new DatagramSocket();
-
-            ByteArrayOutputStream bout = new ByteArrayOutputStream();
-            ObjectOutputStream oout = new ObjectOutputStream(bout);
-            oout.writeUnshared(grdsServerMessageUDP);
-
-            DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, Integer.parseInt(grdsPort));
-            socketUDP.send(packetUDP);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-
-    }
 }
