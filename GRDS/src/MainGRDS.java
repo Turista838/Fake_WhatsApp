@@ -58,7 +58,7 @@ public class MainGRDS {
                         else {
                             if(((GRDSServerMessageUDP) obj).notifyServersToDownloadFiles()){
                                 System.out.println("recebi notifyServersToDownloadFiles");
-                                new ProcessServerMessagesUDP(serverList, packet.getAddress().getHostAddress(), packet.getPort());
+                                new ProcessServerMessagesUDP(((GRDSServerMessageUDP) obj).getFilesList(), serverList, packet.getAddress().getHostAddress(), packet.getPort());
                                 //processServerMessages.start();
                             }
                             else {

@@ -11,6 +11,7 @@ import java.sql.*;
 
 public class MainServer {
 
+    public static final String FILES_FOLDER_PATH = "C:\\TempServer";
     public static final int MAX_SIZE = 10000;
     public static final int TIMEOUT = 10; //segundos
     public static final String MULTICAST_IP = "230.30.30.30";
@@ -99,11 +100,11 @@ public class MainServer {
 
                             if(obj instanceof String){
                                 if(obj.equals("Client")) { // Cliente conectado, lança thread para gestão de pedidos
-                                    ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
+                                    ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(FILES_FOLDER_PATH, in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
                                     processClientMessagesTCP.start();
                                 }
                                 if(obj.equals("Server")){ //Servidor conectado, lança thread para enviar ficheiros
-                                    ProcessServerFilesRequestTCP processServerFilesRequestTCP = new ProcessServerFilesRequestTCP(in, out, socketTCP);
+                                    ProcessServerFilesRequestTCP processServerFilesRequestTCP = new ProcessServerFilesRequestTCP(FILES_FOLDER_PATH, in, out, socketTCP);
                                     processServerFilesRequestTCP.start();
                                 }
                             }
@@ -163,7 +164,6 @@ public class MainServer {
                     grdsServerMessageUDP = (GRDSServerMessageUDP) oin.readObject();
                     succesfullConnection = true;
 
-                    //TODO escutar por ligações cliente TCP e lançar threads
 
                 } catch (Exception e) { //TODO melhorar catches
                     System.out.println("Problema:\n\t" + e);

@@ -13,9 +13,10 @@ public class UpdateGRDSMessagesUDP extends Thread {
 
     private DatagramSocket socketUDP;
     private InetAddress grdsIP;
-    private  String grdsPort;
+    private String grdsPort;
     private String message;
     private ArrayList<String> clientsAffectedBySGBDChanges;
+    private ArrayList<String> storedFilesList;
 
     public UpdateGRDSMessagesUDP(DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort, String message, ArrayList clientsAffectedBySGBDChanges){
         this.message = message;
@@ -26,15 +27,15 @@ public class UpdateGRDSMessagesUDP extends Thread {
         this.runUpdateClients();
     }
 
-    public UpdateGRDSMessagesUDP(DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort) {
-        System.out.println("ENTREI NO CONSTRUTOR");
+    public UpdateGRDSMessagesUDP(ArrayList storedFilesList, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort) {
+        this.storedFilesList = storedFilesList;
         this.socketUDP = socketUDP;
         this.grdsIP = grdsIP;
         this.grdsPort = grdsPort;
         this.runRequestFiles();
     }
 
-    public void runUpdateClients(){
+    public void runUpdateClients(){ //envia ao GRDS
 
         GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false);
         grdsServerMessageUDP.setMessage(message);
@@ -55,11 +56,12 @@ public class UpdateGRDSMessagesUDP extends Thread {
         }
     }
 
-    public void runRequestFiles(){
+    public void runRequestFiles(){ //envia ao GRDS
 
         System.out.println("vou correr runRequestFiles()");
 
         GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true);
+        grdsServerMessageUDP.setFilesList(storedFilesList);
 
         try{
             //InetAddress gbdsAddr = InetAddress.getByName(grdsIP);

@@ -8,7 +8,6 @@ import javafx.util.Duration;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -31,9 +30,13 @@ public class ClientManager extends Thread {
     private ArrayList<String> selectedGroupMembersList;
     private ArrayList<String> pendingInvitesListUsers;
     private HashMap pendingInvitesListGroups;
+    private int nBytes;
+    private byte [] buffer = new byte[4096];
 
     private ObjectOutputStream oout; //enviar TCP
     private ObjectInputStream oin; //receber TCP
+
+    public static final String FILES_FOLDER_PATH = "C:\\TempClient";
 
     private final PropertyChangeSupport propertyChangeSupport;
     public final static String VIEW_CHANGED = "View Changed";
@@ -152,6 +155,23 @@ public class ClientManager extends Thread {
                         }
                     }
                     addAsterisk(((UpdateMessageListTCP) obj).getContactsWithUnreadMessages());
+                }
+
+                if (obj instanceof FileMessageTCP) { //Actualiza mensagens
+                    long fileS = ((FileMessageTCP) obj).getFileSize();
+                    int cont = 0;
+                    InputStream in = cs.getServerSocket().getInputStream();
+                    FileOutputStream localFileOutputStream = new FileOutputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
+
+                    do {
+                        nBytes = in.read(buffer);
+                        cont = cont + nBytes;
+                        if (nBytes > 0) { //porque pode vir nBytes = -1
+                            localFileOutputStream.write(buffer, 0, nBytes);
+                        }
+                    } while (cont != fileS);
+
+                    localFileOutputStream.close();
                 }
 
                 if (obj instanceof GroupManagementTCP) { //Actualiza Gestão de Grupo
@@ -325,10 +345,11 @@ public class ClientManager extends Thread {
     }
 
     public void sendDirectFile(File selectedFile) {
-        byte []fileChunk = new byte[4000];
+        byte []fileChunk = new byte[4096];
         int nBytes;
         try {
-            FileMessageTCP fileMessageTCP = new FileMessageTCP(selectedFile.length(), selectedFile.getName());
+            FileMessageTCP fileMessageTCP = new FileMessageTCP(username, selectedContact, selectedFile.length(), selectedFile.getName());
+            fileMessageTCP.setUploading(true);
             oout.writeObject(fileMessageTCP);
             oout.flush();
             OutputStream fileOut = cs.getServerSocket().getOutputStream();
@@ -340,9 +361,19 @@ public class ClientManager extends Thread {
                     fileOut.write(fileChunk, 0, nBytes);
                     fileOut.flush();
                 }
-                //TODO FILE CLOSE (?)
             } while (nBytes > 0);
+            fileInputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void downloadFile(String fileName) {
+        try{
+            FileMessageTCP fileMessageTCP = new FileMessageTCP(username, selectedContact, 0, fileName);
+            fileMessageTCP.setDownload(true);
+            oout.writeObject(fileMessageTCP);
+            oout.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -564,6 +595,5 @@ public class ClientManager extends Thread {
             }
         }
     }
-
 
 }

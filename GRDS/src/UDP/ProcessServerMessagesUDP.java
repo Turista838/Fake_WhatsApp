@@ -15,6 +15,7 @@ public class ProcessServerMessagesUDP extends Thread {
     private static final int MAX_SIZE = 10000;
     private ServerList serverList;
     private ArrayList<String> clientsAffectedBySGBDChanges;
+    private ArrayList<String> filesList;
     private String message;
     private String serverIp;
     private int serverPort;
@@ -29,14 +30,13 @@ public class ProcessServerMessagesUDP extends Thread {
         sendServersUpdateClients();
     }
 
-
-    public ProcessServerMessagesUDP(ServerList serverList, String serverIp, int serverPort) {
+    public ProcessServerMessagesUDP(ArrayList filesList, ServerList serverList, String serverIp, int serverPort) {
+        this.filesList = filesList;
         this.serverList = serverList;
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         sendServersUpdateFiles();
     }
-
 
     public void sendServersUpdateClients(){
 
@@ -92,6 +92,7 @@ public class ProcessServerMessagesUDP extends Thread {
                     ObjectOutputStream oout = new ObjectOutputStream(bout);
 
                     GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true);
+                    grdsServerMessageUDP.setFilesList(filesList);
                     grdsServerMessageUDP.setServerTCPData(serverIp, this.serverPort);
                     oout.writeUnshared(grdsServerMessageUDP);
 

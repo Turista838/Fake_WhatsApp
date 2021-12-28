@@ -30,7 +30,7 @@ public class MainClient extends Application {
         else{
             arg0 = args[0];
             arg1 = args[1];
-            launch(args); //TODO ?
+            launch(args);
         }
     }
 

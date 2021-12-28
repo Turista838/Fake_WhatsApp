@@ -2,6 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import SharedClasses.Data.MessageList;
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -24,6 +25,7 @@ public class MainPane extends BorderPane {
     private ClientManager clientManager;
 
     private String selectedContact;
+    private String selectedMessage;
 
     private ListView usersList;
     private ListView conversationList;
@@ -50,7 +52,9 @@ public class MainPane extends BorderPane {
     private Button editGroupButton;
     private Button sendMessageButton;
     private Button sendFileButton;
+    private Button getFileButton;
     private Button removeMessageButton;
+    private Button removeFileButton;
 
     public MainPane(ClientManager clientManager, int width, int height){
         this.clientManager = clientManager;
@@ -77,7 +81,9 @@ public class MainPane extends BorderPane {
         editGroupButton = new Button("Edit Group");
         sendMessageButton = new Button("Send");
         sendFileButton = new Button("Send File");
+        getFileButton = new Button("Get File");
         removeMessageButton = new Button("Remove Message");
+        removeFileButton = new Button("Remove File");
 
         mainBox = new VBox();
         menuBox = new HBox();
@@ -111,11 +117,15 @@ public class MainPane extends BorderPane {
 
         conversationList.setPrefWidth(760);
 
-        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, removeMessageButton);
+        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, getFileButton, removeMessageButton, removeFileButton);
         writeMessageBox.setAlignment(Pos.CENTER);
         setBottom(writeMessageBox);
         //writeMessageBox.setTranslateX(247.5);
         writeMessageBox.setPadding(new Insets(10, 10, 10, 10));
+
+        removeMessageButton.setVisible(false);
+        getFileButton.setVisible(false);
+        removeFileButton.setVisible(false);
 
         addUserButton.setOnAction(ev -> {
             Stage stage = new Stage();
@@ -204,22 +214,44 @@ public class MainPane extends BorderPane {
             }
         });
 
+        getFileButton.setOnMouseClicked(event -> {
+            selectedMessage = (String)conversationList.getSelectionModel().getSelectedItem();
+            if(selectedMessage.contains("#Ficheiro: ")) {
+                selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
+                clientManager.downloadFile(selectedMessage);
+            }
+        });
+
+
+        conversationList.setOnMouseClicked(event -> {
+            if(conversationList.getSelectionModel().getSelectedItem().toString().contains("#Ficheiro:")){
+                removeMessageButton.setVisible(false);
+                getFileButton.setVisible(true);
+                removeFileButton.setVisible(true);
+            }
+            else{
+                removeMessageButton.setVisible(true);
+                getFileButton.setVisible(false);
+                removeFileButton.setVisible(false);
+            }
+        });
+
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
 
-        menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
-                CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
-        conversationListBox.setBackground(new Background(new BackgroundFill(Color.TURQUOISE,
-                CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
-        readMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN,
-        CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
+//        menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
+//                CornerRadii.EMPTY,
+//                Insets.EMPTY))); //TODO apagar (debug)
+//        conversationListBox.setBackground(new Background(new BackgroundFill(Color.TURQUOISE,
+//                CornerRadii.EMPTY,
+//                Insets.EMPTY)));
+//        readMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN,
+//        CornerRadii.EMPTY,
+//                Insets.EMPTY)));
         writeMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTPINK,
         CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
+                Insets.EMPTY)));
 
     }
 

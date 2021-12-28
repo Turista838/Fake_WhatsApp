@@ -7,13 +7,15 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 
-public class ProcessServerFilesRequestTCP extends Thread {
+public class ProcessServerFilesRequestTCP extends Thread { //envia ficheiros aos restantes servidores
 
+    private final String filesFolderPath;
     private final Socket socket;
     private ObjectInputStream oin;
     private ObjectOutputStream oout;
 
-    public ProcessServerFilesRequestTCP(ObjectInputStream in, ObjectOutputStream out, Socket socket){
+    public ProcessServerFilesRequestTCP(String filesFolderPath, ObjectInputStream in, ObjectOutputStream out, Socket socket){
+        this.filesFolderPath = filesFolderPath;
         oin = in;
         oout = out;
         this.socket = socket;

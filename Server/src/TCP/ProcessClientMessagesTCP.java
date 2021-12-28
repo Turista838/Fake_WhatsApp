@@ -8,8 +8,10 @@ import UDP.UpdateGRDSMessagesUDP;
 import java.io.*;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -17,6 +19,7 @@ import java.util.Objects;
 
 public class ProcessClientMessagesTCP extends Thread {
 
+    private final String FILES_FOLDER_PATH;
     private final Socket socket;
     private ObjectInputStream oin;
     private ObjectOutputStream oout;
@@ -32,12 +35,10 @@ public class ProcessClientMessagesTCP extends Thread {
     private byte [] buffer = new byte[4096];
     private ArrayList storedFilesList;
 
-    public final static String FILES_FOLDER_PATH = "C:\\Temp";
-
     public final static String UPDATE_CONTACTS = "Update Contacts";
     public final static String UPDATE_MESSAGES = "Update Message";
 
-    public ProcessClientMessagesTCP(ObjectInputStream in, ObjectOutputStream out, Socket socket, ClientList clientList, Connection conn, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort){
+    public ProcessClientMessagesTCP(String files_folder_path, ObjectInputStream in, ObjectOutputStream out, Socket socket, ClientList clientList, Connection conn, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort){
         oin = in;
         oout = out;
         this.socket = socket;
@@ -45,6 +46,7 @@ public class ProcessClientMessagesTCP extends Thread {
         this.socketUDP = socketUDP;
         clientsAffectedBySGBDChanges = new ArrayList<String>();
         storedFilesList = new ArrayList<String>();
+        FILES_FOLDER_PATH = files_folder_path;
         this.grdsIP = grdsIP;
         this.grdsPort = grdsPort;
         rs = null;
@@ -213,25 +215,50 @@ public class ProcessClientMessagesTCP extends Thread {
                 }
 
                 if (obj instanceof FileMessageTCP){
-                    long fileS = ((FileMessageTCP) obj).getFileSize();
-                    int cont = 0;
-                    InputStream in = socket.getInputStream();
-                    FileOutputStream localFileOutputStream = new FileOutputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
-                    do{
-                        nBytes = in.read(buffer);
-                        cont = cont + nBytes;
-                        System.out.println("recebi. nBytes = " +  nBytes);
-                        if(nBytes > 0)  { //porque pode vir nBytes = -1
-                            localFileOutputStream.write(buffer, 0, nBytes);
-                        }
-                    }while(cont != fileS);
-                    storedFilesList.add(((FileMessageTCP) obj).getFilename());
-                    //TODO FILE CLOSE (?)
-                    System.out.println("guardei um ficheiro");
-                    //TODO update na BD
-                    sendUpdateMessageToServerClients(UPDATE_MESSAGES, clientsAffectedBySGBDChanges);
-                    new UpdateGRDSMessagesUDP(socketUDP, grdsIP, grdsPort);
-                    //TODO send serversocket para os outros servidores sacarem o ficheiro
+                    if(((FileMessageTCP) obj).getUploading()) {
+                        long fileS = ((FileMessageTCP) obj).getFileSize();
+                        int cont = 0;
+                        InputStream in = socket.getInputStream();
+                        FileOutputStream localFileOutputStream = new FileOutputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
+
+                        do {
+                            nBytes = in.read(buffer);
+                            cont = cont + nBytes;
+                            if (nBytes > 0) { //porque pode vir nBytes = -1
+                                localFileOutputStream.write(buffer, 0, nBytes);
+                            }
+                        } while (cont != fileS);
+
+                        storedFilesList.add(((FileMessageTCP) obj).getFilename());
+                        localFileOutputStream.close();
+
+                        stmt.executeUpdate("INSERT INTO mensagem_de_pares VALUES (0, 1, current_timestamp(), \"#Ficheiro: " + ((FileMessageTCP) obj).getFilename() + "\", \"" + ((FileMessageTCP) obj).getSender() + "\", \"" + ((FileMessageTCP) obj).getDestination() + "\");");
+                        oout.writeObject(UPDATE_MESSAGES);
+                        oout.flush();
+
+                        sendUpdateMessageToServerClients(UPDATE_MESSAGES, clientsAffectedBySGBDChanges);
+                        new UpdateGRDSMessagesUDP(storedFilesList, socketUDP, grdsIP, grdsPort);
+                    }
+                    if(((FileMessageTCP) obj).getDownload()){
+                        byte []fileChunk = new byte[4096];
+                        Path path = Paths.get(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
+                        FileMessageTCP fileMessageTCP = new FileMessageTCP(Files.size(path), ((FileMessageTCP) obj).getFilename());
+                        fileMessageTCP.setDownload(true);
+                        oout.writeObject(fileMessageTCP);
+                        oout.flush();
+
+                        OutputStream fileOut = socket.getOutputStream();
+                        FileInputStream fileInputStream = new FileInputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
+                        do {
+                            nBytes = fileInputStream.read(fileChunk);
+                            System.out.println("Documento tem nBytes = " + nBytes);
+                            if (nBytes != -1) {// enquanto não é EOF
+                                fileOut.write(fileChunk, 0, nBytes);
+                                fileOut.flush();
+                            }
+                        } while (nBytes > 0);
+                        fileInputStream.close();
+                    }
                 }
 
                 if (obj instanceof UserManagementTCP) { //Editar Perfil

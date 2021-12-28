@@ -3,6 +3,7 @@ package UDP;
 import Data.ClientInfo;
 import Data.ClientList;
 import SharedClasses.GRDSServerMessageUDP;
+import TCP.ProcessServerFilesDownloadTCP;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -56,18 +57,15 @@ public class ProcessGRDSMessagesUDP extends Thread {
                     }
                 }
 
-                if(grdsServerMessageUDP.notifyServersToDownloadFiles()){
+                if(grdsServerMessageUDP.notifyServersToDownloadFiles()){ //estabelece connecção para receber ficheiros do servidor que enviou notificação ao GRDS
 
                     InetAddress serverAddr = InetAddress.getByName(grdsServerMessageUDP.getFileServerIp());
                     System.out.println("IP: " + grdsServerMessageUDP.getFileServerIp());
                     System.out.println("Porto: " + grdsServerMessageUDP.getFileServerPort());
                     Socket socket = new Socket(serverAddr, grdsServerMessageUDP.getFileServerPort()); //criar socket TCP
 
-                    ObjectOutputStream fileOut = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream fileOin = new ObjectInputStream(socket.getInputStream());
+                    new ProcessServerFilesDownloadTCP(grdsServerMessageUDP.getFilesList(), socket);
 
-                    fileOut.writeObject("Server");
-                    fileOut.flush();
                 }
 
 
