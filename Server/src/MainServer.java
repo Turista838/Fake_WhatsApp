@@ -8,6 +8,7 @@ import UDP.ProcessGRDSMessagesUDP;
 import java.io.*;
 import java.net.*;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class MainServer {
 
@@ -25,6 +26,8 @@ public class MainServer {
         InetAddress grdsAddr = null;
         String grdsIP;
         String grdsPort;
+
+        ArrayList<String> filesList = new ArrayList<String>();
 
         ByteArrayOutputStream bout; //enviar
         ObjectOutputStream oout; //enviar
@@ -61,6 +64,7 @@ public class MainServer {
 
             grdsIP = args[0]; //IP GRDS
             grdsPort = args[1]; //Porto GRDS
+            //TODO ir à pasta e sacar os nomes dos ficheiros
 
             try{ //connectar ao GRDS UDP
 
@@ -78,7 +82,7 @@ public class MainServer {
                 PingGRDSMessagesUDP pingGRDSMessagesUDP = new PingGRDSMessagesUDP(socketUDP, grdsAddr, grdsPort);
                 pingGRDSMessagesUDP.start();
 
-                ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList);
+                ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList, filesList, FILES_FOLDER_PATH);
                 processGRDSMessagesUDP.start();
 
                 try{ //tratar de clientes TCP
@@ -100,11 +104,11 @@ public class MainServer {
 
                             if(obj instanceof String){
                                 if(obj.equals("Client")) { // Cliente conectado, lança thread para gestão de pedidos
-                                    ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(FILES_FOLDER_PATH, in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
+                                    ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(FILES_FOLDER_PATH, filesList, in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
                                     processClientMessagesTCP.start();
                                 }
                                 if(obj.equals("Server")){ //Servidor conectado, lança thread para enviar ficheiros
-                                    ProcessServerFilesRequestTCP processServerFilesRequestTCP = new ProcessServerFilesRequestTCP(FILES_FOLDER_PATH, in, out, socketTCP);
+                                    ProcessServerFilesRequestTCP processServerFilesRequestTCP = new ProcessServerFilesRequestTCP(FILES_FOLDER_PATH, filesList, in, out, socketTCP);
                                     processServerFilesRequestTCP.start();
                                 }
                             }

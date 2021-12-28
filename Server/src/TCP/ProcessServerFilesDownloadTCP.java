@@ -1,39 +1,73 @@
 package TCP;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import SharedClasses.FileMessageTCP;
+
+import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class ProcessServerFilesDownloadTCP extends Thread {
 
     private final Socket socket;
     private ArrayList<String> filesList;
+    private String filesFolderPath;
+    byte []buffer = new byte[4096];
+    int nBytes;
 
-
-    public ProcessServerFilesDownloadTCP(ArrayList filesList, Socket socket) {
+    public ProcessServerFilesDownloadTCP(String filesFolderPath, ArrayList filesList, Socket socket) {
         this.filesList = filesList;
         this.socket = socket;
+        this.filesFolderPath = filesFolderPath;
         run();
     }
 
-    public void run(){ //TODO
+    public void run(){
 
         try{
-            ObjectOutputStream fileOut = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream fileOin = new ObjectInputStream(socket.getInputStream());
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-            fileOut.writeObject("Server");
-            fileOut.flush();
+            out.writeObject("Server");
+            out.flush();
 
-            System.out.println("Lista de ficheiros: ");
-            ArrayList<String> teste = filesList;
-            for(int i = 0; i < teste.size(); i++)
-                System.out.println("Ficheiro: " + teste.get(i));
+            for(int i = 0; i < filesList.size(); i++){
+
+                Object obj = in.readObject();
+
+                if (obj == null) { //EOF
+                    return;
+                }
+
+                if (obj instanceof FileMessageTCP){
+
+                    long fileS = ((FileMessageTCP) obj).getFileSize();
+                    int cont = 0;
+                    InputStream fileIn = socket.getInputStream();
+                    FileOutputStream localFileOutputStream = new FileOutputStream(filesFolderPath + "\\" + ((FileMessageTCP) obj).getFilename());
+
+                    do {
+                        nBytes = fileIn.read(buffer);
+                        cont = cont + nBytes;
+                        if (nBytes > 0) { //porque pode vir nBytes = -1
+                            localFileOutputStream.write(buffer, 0, nBytes);
+                        }
+                    } while (cont != fileS);
+
+                    localFileOutputStream.close();
+                }
+
+            }
+
+//            System.out.println("Lista de ficheiros: ");
+//            ArrayList<String> teste = filesList;
+//
+//            Collections.sort(filesList);
+//            for(int i = 0; i < teste.size(); i++)
+//                System.out.println("Ficheiro: " + teste.get(i));
 
 
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
 

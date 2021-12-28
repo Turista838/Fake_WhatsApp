@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
 
 
@@ -38,17 +39,17 @@ public class ProcessClientMessagesTCP extends Thread {
     public final static String UPDATE_CONTACTS = "Update Contacts";
     public final static String UPDATE_MESSAGES = "Update Message";
 
-    public ProcessClientMessagesTCP(String files_folder_path, ObjectInputStream in, ObjectOutputStream out, Socket socket, ClientList clientList, Connection conn, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort){
+    public ProcessClientMessagesTCP(String files_folder_path, ArrayList<String> storedFilesList, ObjectInputStream in, ObjectOutputStream out, Socket socket, ClientList clientList, Connection conn, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort){
         oin = in;
         oout = out;
         this.socket = socket;
         this.clientList = clientList;
         this.socketUDP = socketUDP;
-        clientsAffectedBySGBDChanges = new ArrayList<String>();
-        storedFilesList = new ArrayList<String>();
-        FILES_FOLDER_PATH = files_folder_path;
+        this.storedFilesList = storedFilesList;
         this.grdsIP = grdsIP;
         this.grdsPort = grdsPort;
+        FILES_FOLDER_PATH = files_folder_path;
+        clientsAffectedBySGBDChanges = new ArrayList<String>();
         rs = null;
         try{
             stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
@@ -230,6 +231,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         } while (cont != fileS);
 
                         storedFilesList.add(((FileMessageTCP) obj).getFilename());
+                        Collections.sort(storedFilesList);
                         localFileOutputStream.close();
 
                         stmt.executeUpdate("INSERT INTO mensagem_de_pares VALUES (0, 1, current_timestamp(), \"#Ficheiro: " + ((FileMessageTCP) obj).getFilename() + "\", \"" + ((FileMessageTCP) obj).getSender() + "\", \"" + ((FileMessageTCP) obj).getDestination() + "\");");
@@ -251,7 +253,6 @@ public class ProcessClientMessagesTCP extends Thread {
                         FileInputStream fileInputStream = new FileInputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
                         do {
                             nBytes = fileInputStream.read(fileChunk);
-                            System.out.println("Documento tem nBytes = " + nBytes);
                             if (nBytes != -1) {// enquanto não é EOF
                                 fileOut.write(fileChunk, 0, nBytes);
                                 fileOut.flush();

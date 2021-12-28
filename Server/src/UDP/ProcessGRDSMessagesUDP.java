@@ -17,15 +17,19 @@ import java.util.ArrayList;
 
 public class ProcessGRDSMessagesUDP extends Thread {
 
-    public static final int MAX_SIZE = 10000;
+    private static final int MAX_SIZE = 10000;
     private DatagramPacket packetUDP;
     private DatagramSocket socketUDP;
     private ClientList clientList;
+    private ArrayList<String> filesList;
+    private String filesFolderPath;
 
-    public ProcessGRDSMessagesUDP(DatagramPacket packetUDP, DatagramSocket socketUDP, ClientList clientList) {
+    public ProcessGRDSMessagesUDP(DatagramPacket packetUDP, DatagramSocket socketUDP, ClientList clientList, ArrayList<String> filesList, String filesFolderPath) {
         this.packetUDP = packetUDP;
         this.socketUDP = socketUDP;
         this.clientList = clientList;
+        this.filesList = filesList;
+        this.filesFolderPath = filesFolderPath;
     }
 
     public void run(){
@@ -63,8 +67,8 @@ public class ProcessGRDSMessagesUDP extends Thread {
                     System.out.println("IP: " + grdsServerMessageUDP.getFileServerIp());
                     System.out.println("Porto: " + grdsServerMessageUDP.getFileServerPort());
                     Socket socket = new Socket(serverAddr, grdsServerMessageUDP.getFileServerPort()); //criar socket TCP
-
-                    new ProcessServerFilesDownloadTCP(grdsServerMessageUDP.getFilesList(), socket);
+                    filesList = grdsServerMessageUDP.getFilesList(); //para sincronizar todas as listas
+                    new ProcessServerFilesDownloadTCP(filesFolderPath, filesList, socket);
 
                 }
 
