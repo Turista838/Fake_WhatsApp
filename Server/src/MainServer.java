@@ -1,6 +1,8 @@
 import Data.ClientList;
 import SharedClasses.*;
 import TCP.ProcessClientMessagesTCP;
+import TCP.ProcessServerFilesRequestTCP;
+import UDP.PingGRDSMessagesUDP;
 import UDP.ProcessGRDSMessagesUDP;
 
 import java.io.*;
@@ -19,7 +21,7 @@ public class MainServer {
     public static void main(String[] args) {
 
         ClientList clientList = new ClientList();
-        InetAddress gbdsAddr = null;
+        InetAddress grdsAddr = null;
         String grdsIP;
         String grdsPort;
 
@@ -33,11 +35,11 @@ public class MainServer {
         DatagramPacket packetUDP = null;
 
         ServerSocket serverSocketTCP = null;
-        Socket clientSocketTCP = null;
+        Socket socketTCP = null;
 
         MulticastSocket multicastSocket = null;
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false);
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, false);
 
         Connection conn = null;
 
@@ -61,7 +63,7 @@ public class MainServer {
 
             try{ //connectar ao GRDS UDP
 
-                gbdsAddr = InetAddress.getByName(grdsIP);
+                grdsAddr = InetAddress.getByName(grdsIP);
                 socketUDP = new DatagramSocket();
                 //socket.setSoTimeout(TIMEOUT*1000);
                 //encapsular a mensagem
@@ -69,8 +71,11 @@ public class MainServer {
                 oout = new ObjectOutputStream(bout);
                 oout.writeUnshared(grdsServerMessageUDP);
                 //send
-                packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, Integer.parseInt(grdsPort));
+                packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), grdsAddr, Integer.parseInt(grdsPort));
                 socketUDP.send(packetUDP);
+
+                PingGRDSMessagesUDP pingGRDSMessagesUDP = new PingGRDSMessagesUDP(socketUDP, grdsAddr, grdsPort);
+                pingGRDSMessagesUDP.start();
 
                 ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList);
                 processGRDSMessagesUDP.start();
@@ -82,10 +87,26 @@ public class MainServer {
                     while(true){ //TODO remover este true
 
                         try{
-                            clientSocketTCP = serverSocketTCP.accept();
-                            //clientSocketTCP.setSoTimeout(TIMEOUT);
-                            ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(clientSocketTCP, clientList, conn, grdsIP, grdsPort);
-                            processClientMessagesTCP.start();
+                            socketTCP = serverSocketTCP.accept();
+                            ObjectOutputStream out = new ObjectOutputStream(socketTCP.getOutputStream());
+                            ObjectInputStream in = new ObjectInputStream(socketTCP.getInputStream());
+
+                            Object obj = in.readObject();
+
+                            if (obj == null) { //EOF
+                                return;
+                            }
+
+                            if(obj instanceof String){
+                                if(obj.equals("Client")) { // Cliente conectado, lança thread para gestão de pedidos
+                                    ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
+                                    processClientMessagesTCP.start();
+                                }
+                                if(obj.equals("Server")){ //Servidor conectado, lança thread para enviar ficheiros
+                                    ProcessServerFilesRequestTCP processServerFilesRequestTCP = new ProcessServerFilesRequestTCP(in, out, socketTCP);
+                                    processServerFilesRequestTCP.start();
+                                }
+                            }
                         }
                         catch(IOException e){
                             System.out.println("Erro enquanto aguarda por um pedido");
@@ -124,14 +145,14 @@ public class MainServer {
                 System.out.println("Attempt number " + (attemps + 1));
                 attemps++;
                 try {
-                    gbdsAddr = InetAddress.getByName(MULTICAST_IP);
+                    grdsAddr = InetAddress.getByName(MULTICAST_IP);
                     multicastSocket = new MulticastSocket(MULTICAST_PORT);
 
                     bout = new ByteArrayOutputStream();
                     oout = new ObjectOutputStream(bout);
                     oout.writeUnshared(grdsServerMessageUDP);
                     //send
-                    packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), gbdsAddr, MULTICAST_PORT);
+                    packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), grdsAddr, MULTICAST_PORT);
                     multicastSocket.send(packetUDP);
                     //receive
                     packetUDP = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);

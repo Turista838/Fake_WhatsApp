@@ -84,13 +84,14 @@ public class ClientStartup {
 
         try{
 
-            //Construir o pedido
             serverAddr = InetAddress.getByName(serverIP);
             serverSocket = new Socket(serverAddr, serverPort); //criar socket TCP
-            //serverSocket.setSoTimeout(TIMEOUT*1000); //definir timeout (é em milisegundos por isso a multiplicação)
 
             oout = new ObjectOutputStream(serverSocket.getOutputStream());
             oin = new ObjectInputStream(serverSocket.getInputStream());
+
+            oout.writeObject("Client");
+            oout.flush();
 
         }catch(UnknownHostException e){
             System.out.println("Destino desconhecido:\n\t"+e);
@@ -110,14 +111,6 @@ public class ClientStartup {
 //                } catch (IOException e) { }
 //            }
 //        }
-    }
-
-    public String getServerIP() {
-        return serverIP;
-    }
-
-    public int getServerPort() {
-        return serverPort;
     }
 
     public Socket getServerSocket() {

@@ -8,7 +8,6 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 
 public class ProcessServerMessagesUDP extends Thread {
@@ -16,46 +15,97 @@ public class ProcessServerMessagesUDP extends Thread {
     private static final int MAX_SIZE = 10000;
     private ServerList serverList;
     private ArrayList<String> clientsAffectedBySGBDChanges;
-    private  String message;
+    private String message;
+    private String serverIp;
+    private int serverPort;
 
 
-    public ProcessServerMessagesUDP(ServerList serverList, ArrayList<String> clientsAffectedBySGBDChanges, String message) {
+    public ProcessServerMessagesUDP(ServerList serverList, String serverIp, int serverPort, ArrayList clientsAffectedBySGBDChanges, String message) {
         this.serverList = serverList;
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
         this.clientsAffectedBySGBDChanges = clientsAffectedBySGBDChanges;
         this.message = message;
+        sendServersUpdateClients();
     }
 
-    public void run(){
+
+    public ProcessServerMessagesUDP(ServerList serverList, String serverIp, int serverPort) {
+        this.serverList = serverList;
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+        sendServersUpdateFiles();
+    }
+
+
+    public void sendServersUpdateClients(){
 
         try {
-            System.out.println("Servidor enviou uma mensagem para transmitir a todos os servidores");
+            System.out.println("Servidor enviou uma mensagem para transmitir a todos os servidores para estes avisarem os clientes para fazerem update");
 
             for(ServerInfo serverInfo : serverList.arrayServerList){
 
-                InetAddress serverAddr = null;
-                String serverIP = serverInfo.getServerIP();
-                int serverPort = serverInfo.getServerPort();
+                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort) {
+                    InetAddress serverAddr = null;
+                    String serverIP = serverInfo.getServerIP();
+                    int serverPort = serverInfo.getServerPort();
 
-                serverAddr = InetAddress.getByName(serverIP);
-                DatagramSocket socketUDP = new DatagramSocket();
+                    serverAddr = InetAddress.getByName(serverIP);
+                    DatagramSocket socketUDP = new DatagramSocket();
 
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                ObjectOutputStream oout = new ObjectOutputStream(bout);
+                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                    ObjectOutputStream oout = new ObjectOutputStream(bout);
 
-                GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true);
-                grdsServerMessageUDP.setClientsAffectedBySGBDChanges(clientsAffectedBySGBDChanges);
-                grdsServerMessageUDP.setMessage(message);
-                oout.writeUnshared(grdsServerMessageUDP);
+                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false);
+                    grdsServerMessageUDP.setClientsAffectedBySGBDChanges(clientsAffectedBySGBDChanges);
+                    grdsServerMessageUDP.setMessage(message);
+                    oout.writeUnshared(grdsServerMessageUDP);
 
-                //send
-                DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), serverAddr, serverPort);
-                socketUDP.send(packetUDP);
+                    //send
+                    DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), serverAddr, serverPort);
+                    socketUDP.send(packetUDP);
+                }
             }
 
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendServersUpdateFiles(){
+
+        try {
+            System.out.println("Servidor enviou uma mensagem para transmitir a todos os servidores para estes fazerem update aos ficheiros");
+
+            for(ServerInfo serverInfo : serverList.arrayServerList){
+
+                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort) {
+                    InetAddress serverAddr = null;
+                    String serverIP = serverInfo.getServerIP();
+                    int serverPort = serverInfo.getServerPort();
+
+                    serverAddr = InetAddress.getByName(serverIP);
+                    DatagramSocket socketUDP = new DatagramSocket();
+
+                    ByteArrayOutputStream bout = new ByteArrayOutputStream();
+                    ObjectOutputStream oout = new ObjectOutputStream(bout);
+
+                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true);
+                    grdsServerMessageUDP.setServerTCPData(serverIp, this.serverPort);
+                    oout.writeUnshared(grdsServerMessageUDP);
+
+                    //send
+                    DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), serverAddr, serverPort);
+                    socketUDP.send(packetUDP);
+                }
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

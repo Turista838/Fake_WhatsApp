@@ -50,22 +50,30 @@ public class MainGRDS {
                         ProcessClientMessagesUDP processClientMessages = new ProcessClientMessagesUDP(socket, packet, (GRDSClientMessageUDP) obj, serverIpAndPort);
                         processClientMessages.start();
                     }
-                    if(obj instanceof GRDSServerMessageUDP){ //estes serverList deviam estar contido num mutex?
+                    if(obj instanceof GRDSServerMessageUDP){
                         if(((GRDSServerMessageUDP) obj).isUpdateBDconnection()){
-                            ProcessServerMessagesUDP processServerMessages = new ProcessServerMessagesUDP(serverList, ((GRDSServerMessageUDP) obj).getClientsAffectedBySGBDChanges(), ((GRDSServerMessageUDP) obj).getMessage());
-                            processServerMessages.start();
+                            new ProcessServerMessagesUDP(serverList, packet.getAddress().getHostAddress(), packet.getPort(), ((GRDSServerMessageUDP) obj).getClientsAffectedBySGBDChanges(), ((GRDSServerMessageUDP) obj).getMessage());
+                            //processServerMessages.start();
                         }
                         else {
-                            System.out.println("Porto do servidor: " + packet.getPort());
-                            if (!serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort()))
-                                serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
+                            if(((GRDSServerMessageUDP) obj).notifyServersToDownloadFiles()){
+                                System.out.println("recebi notifyServersToDownloadFiles");
+                                new ProcessServerMessagesUDP(serverList, packet.getAddress().getHostAddress(), packet.getPort());
+                                //processServerMessages.start();
+                            }
+                            else {
+                                System.out.println("Porto do servidor: " + packet.getPort());
+                                if (!serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort()))
+                                    serverList.updateTimeServer(packet.getAddress().getHostAddress(), packet.getPort());
+                            }
                         }
                     }
                     if(obj instanceof String){
-                        String msgRecebida=(String)oin.readObject();
+                        String msgRecebida = (String)obj;
                         if (msgRecebida.compareTo("tcpPort")==0){
                             System.out.println("Recebido o ping do servidor Porto:"+packet.getPort()+" IP:"+packet.getAddress().getHostAddress()+
                             " Porto de escuta TCP:"+packet.getPort());
+                            //TODO update ao time server
                         }
                     }
 

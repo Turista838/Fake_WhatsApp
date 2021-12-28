@@ -3,61 +3,46 @@ package UDP;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Arrays;
+import java.net.*;
 
-public class PingGRDSMessagesUDP  {
+
+public class PingGRDSMessagesUDP extends Thread  {
 
     private static final int MAX_SIZE = 10000;
     private static final String PING="tcpPort";
-    private int grdsPort;
-    private String grdsIp;
+    private  DatagramSocket socketUDP;
+    private InetAddress gbdsAddr;
+    private String grdsPort;
 
-    public PingGRDSMessagesUDP(int grdsPort, String grdsIp) {
+    public PingGRDSMessagesUDP(DatagramSocket socketUDP, InetAddress gbdsAddr, String grdsPort) {
+        this.socketUDP = socketUDP;
+        this.gbdsAddr = gbdsAddr;
         this.grdsPort = grdsPort;
-        this.grdsIp = grdsIp;
     }
 
-    public void run() throws IOException {
+    public void run() {
 
         while (true){
 
-            DatagramSocket ds = new DatagramSocket();
-            ds.setSoTimeout(1000);
-
-            ByteArrayOutputStream baos= new ByteArrayOutputStream();
-            ObjectOutputStream out = new ObjectOutputStream(baos);
-            out.writeObject(PING);
-            //out.flush(); caso n apreça a mensagem toda, despeija o buff
-            byte[] bytesToSend= baos.toByteArray();
-
-            InetAddress ip =InetAddress.getByName(grdsIp);
-
-            DatagramPacket dp= new DatagramPacket(bytesToSend,bytesToSend.length,ip,grdsPort);
-            ds.send(dp);
-            System.out.println("Send to " + ip.getHostAddress() + ":" + grdsPort + " - " + PING);
-
-            dp.setData(new byte[256]);
-            dp.setLength(256);
-
-
-            // a thread vai fazer um sleep de 20 segundos
             try {
-                Thread.sleep(20000);
-            } catch (InterruptedException e) {
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ObjectOutputStream out = new ObjectOutputStream(baos);
+                out.writeObject(PING);
+                //out.flush(); caso n apreça a mensagem toda, despeja o buff
+                byte[] bytesToSend = baos.toByteArray();
+
+                DatagramPacket dp = new DatagramPacket(bytesToSend, bytesToSend.length, gbdsAddr, Integer.parseInt(grdsPort));
+                socketUDP.send(dp);
+
+                dp.setData(new byte[256]);
+                dp.setLength(256);
+
+                Thread.sleep(20000); //Sleep 20 segundos
+
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        return "PingGRDSMessagesUDP{" +
-                "grdsPort=" + grdsPort +
-                ", grdsIp='" + grdsIp + '\'' +
-                '}';
     }
 }

@@ -7,9 +7,8 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
@@ -65,6 +64,15 @@ public class ClientManager extends Thread {
     }
 
     public void run(){
+
+        try {
+            oout.writeObject("Cliente");
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         while (true) {
             try {
 
@@ -308,6 +316,33 @@ public class ClientManager extends Thread {
             GroupMessageTCP groupMessageTCP = new GroupMessageTCP(username, message, selectedContact);
             oout.writeObject(groupMessageTCP);
             oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendGroupFile(File selectedFile) {
+    }
+
+    public void sendDirectFile(File selectedFile) {
+        byte []fileChunk = new byte[4000];
+        int nBytes;
+        try {
+            FileMessageTCP fileMessageTCP = new FileMessageTCP(selectedFile.length(), selectedFile.getName());
+            oout.writeObject(fileMessageTCP);
+            oout.flush();
+            OutputStream fileOut = cs.getServerSocket().getOutputStream();
+            FileInputStream fileInputStream = new FileInputStream(selectedFile.getCanonicalPath());
+            do {
+                nBytes = fileInputStream.read(fileChunk);
+                System.out.println("Documento tem nBytes = " + nBytes);
+                if (nBytes != -1) {// enquanto não é EOF
+                    fileOut.write(fileChunk, 0, nBytes);
+                    fileOut.flush();
+                }
+                //TODO FILE CLOSE (?)
+            } while (nBytes > 0);
+
         } catch (IOException e) {
             e.printStackTrace();
         }

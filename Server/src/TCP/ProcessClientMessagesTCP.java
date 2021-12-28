@@ -6,9 +6,9 @@ import SharedClasses.*;
 import UDP.UpdateGRDSMessagesUDP;
 
 import java.io.*;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.sql.*;
 import java.util.ArrayList;
@@ -18,40 +18,49 @@ import java.util.Objects;
 public class ProcessClientMessagesTCP extends Thread {
 
     private final Socket socket;
+    private ObjectInputStream oin;
+    private ObjectOutputStream oout;
     private String client;
     private ClientList clientList;
     private Statement stmt;
     private ResultSet rs;
     private ArrayList clientsAffectedBySGBDChanges;
-    private String grdsIP;
+    private InetAddress grdsIP;
     private String grdsPort;
+    private DatagramSocket socketUDP;
+    private int nBytes;
+    private byte [] buffer = new byte[4096];
+    private ArrayList storedFilesList;
+
+    public final static String FILES_FOLDER_PATH = "C:\\Temp";
 
     public final static String UPDATE_CONTACTS = "Update Contacts";
     public final static String UPDATE_MESSAGES = "Update Message";
 
-    public ProcessClientMessagesTCP(Socket socket, ClientList clientList, Connection conn, String grdsIP, String grdsPort){
+    public ProcessClientMessagesTCP(ObjectInputStream in, ObjectOutputStream out, Socket socket, ClientList clientList, Connection conn, DatagramSocket socketUDP, InetAddress grdsIP, String grdsPort){
+        oin = in;
+        oout = out;
         this.socket = socket;
         this.clientList = clientList;
+        this.socketUDP = socketUDP;
         clientsAffectedBySGBDChanges = new ArrayList<String>();
+        storedFilesList = new ArrayList<String>();
         this.grdsIP = grdsIP;
         this.grdsPort = grdsPort;
         rs = null;
         try{
             stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
         }
-        catch (SQLException throwables) {
-            throwables.printStackTrace();
+        catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public void run(){
 
-        ObjectInputStream oin;
-        ObjectOutputStream oout;
-
        try{
-            oout = new ObjectOutputStream(socket.getOutputStream());
-            oin = new ObjectInputStream(socket.getInputStream());
+//            oout = new ObjectOutputStream(socket.getOutputStream());
+//            oin = new ObjectInputStream(socket.getInputStream());
 
             while(true) { //TODO alterar este true
                 Object obj = oin.readObject();
@@ -203,6 +212,28 @@ public class ProcessClientMessagesTCP extends Thread {
                     sendUpdateMessageToServerClients(UPDATE_MESSAGES, clientsAffectedBySGBDChanges);
                 }
 
+                if (obj instanceof FileMessageTCP){
+                    long fileS = ((FileMessageTCP) obj).getFileSize();
+                    int cont = 0;
+                    InputStream in = socket.getInputStream();
+                    FileOutputStream localFileOutputStream = new FileOutputStream(FILES_FOLDER_PATH + "\\" + ((FileMessageTCP) obj).getFilename());
+                    do{
+                        nBytes = in.read(buffer);
+                        cont = cont + nBytes;
+                        System.out.println("recebi. nBytes = " +  nBytes);
+                        if(nBytes > 0)  { //porque pode vir nBytes = -1
+                            localFileOutputStream.write(buffer, 0, nBytes);
+                        }
+                    }while(cont != fileS);
+                    storedFilesList.add(((FileMessageTCP) obj).getFilename());
+                    //TODO FILE CLOSE (?)
+                    System.out.println("guardei um ficheiro");
+                    //TODO update na BD
+                    sendUpdateMessageToServerClients(UPDATE_MESSAGES, clientsAffectedBySGBDChanges);
+                    new UpdateGRDSMessagesUDP(socketUDP, grdsIP, grdsPort);
+                    //TODO send serversocket para os outros servidores sacarem o ficheiro
+                }
+
                 if (obj instanceof UserManagementTCP) { //Editar Perfil
                     rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((UserManagementTCP) obj).getUsername() + "\" AND Password = \"" + ((UserManagementTCP) obj).getPassword() + "\");");
                     rs.next();
@@ -210,7 +241,8 @@ public class ProcessClientMessagesTCP extends Thread {
                         if (((UserManagementTCP) obj).getAlteringPassword()) { //é para alterar também a pass
                             //stmt.executeUpdate("");
                         } else { //é só para alterar o username
-                            //stmt.executeUpdate("UPDATE utilizador SET Nome = \"" + ((GroupManagementTCP)obj).getNewGroupName() + "\" WHERE (User_Admin = \"" + ((GroupManagementTCP)obj).getUsername() + "\" AND Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
+
+                           //stmt.executeUpdate("UPDATE utilizador SET Nome = \"" + ((GroupManagementTCP)obj).getNewGroupName() + "\" WHERE (User_Admin = \"" + ((GroupManagementTCP)obj).getUsername() + "\" AND Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
                         }
                         //é preciso alterar nas mensagens e na tabela de grupo
                         sendUpdateMessageToServerClients(UPDATE_CONTACTS, clientsAffectedBySGBDChanges);
@@ -342,7 +374,7 @@ public class ProcessClientMessagesTCP extends Thread {
 
     private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges) {
 
-        new UpdateGRDSMessagesUDP(grdsIP, grdsPort, message, clientsAffectedBySGBDChanges);
+        new UpdateGRDSMessagesUDP(socketUDP, grdsIP, grdsPort, message, clientsAffectedBySGBDChanges);
 
         ArrayList<ClientInfo> cList = clientList.getArrayClientList();
         for(ClientInfo c : cList){

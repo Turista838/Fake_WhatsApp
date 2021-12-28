@@ -2,19 +2,20 @@ package Interface;
 
 import Data.ClientManager;
 import SharedClasses.Data.MessageList;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 import static Data.ClientManager.VIEW_CHANGED;
 
@@ -189,6 +190,18 @@ public class MainPane extends BorderPane {
             }
             clientManager.setSelectedContact(selectedContact);
             clientManager.requestMessages();
+        });
+
+        sendFileButton.setOnMouseClicked(event -> {
+            Stage stage = new Stage();
+            FileChooser fileChooser = new FileChooser();
+            File selectedFile = fileChooser.showOpenDialog(stage);
+            System.out.println(selectedFile);
+            if (clientManager.getContactIsGroup()) {
+                clientManager.sendGroupFile(selectedFile);
+            } else {
+                clientManager.sendDirectFile(selectedFile);
+            }
         });
 
 

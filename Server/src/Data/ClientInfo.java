@@ -11,7 +11,6 @@ public class ClientInfo {
     public ClientInfo(String username, ObjectOutputStream oout){
         this.username = username;
         this.oout = oout;
-
     }
 
     public String getUsername() {

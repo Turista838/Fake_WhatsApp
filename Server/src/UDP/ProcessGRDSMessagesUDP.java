@@ -10,9 +10,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.sql.SQLOutput;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Objects;
 
 public class ProcessGRDSMessagesUDP extends Thread {
 
@@ -54,6 +54,20 @@ public class ProcessGRDSMessagesUDP extends Thread {
                             IOException.printStackTrace();
                         }
                     }
+                }
+
+                if(grdsServerMessageUDP.notifyServersToDownloadFiles()){
+
+                    InetAddress serverAddr = InetAddress.getByName(grdsServerMessageUDP.getFileServerIp());
+                    System.out.println("IP: " + grdsServerMessageUDP.getFileServerIp());
+                    System.out.println("Porto: " + grdsServerMessageUDP.getFileServerPort());
+                    Socket socket = new Socket(serverAddr, grdsServerMessageUDP.getFileServerPort()); //criar socket TCP
+
+                    ObjectOutputStream fileOut = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream fileOin = new ObjectInputStream(socket.getInputStream());
+
+                    fileOut.writeObject("Server");
+                    fileOut.flush();
                 }
 
 
