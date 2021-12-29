@@ -472,7 +472,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void editNameUsername(String newName, String newUsername, String password) {
+    public void editNameUsername(String newName, String newUsername, String password, String oldUsername) {
         if(newName.isEmpty()){
             newName = name;
         }
@@ -480,7 +480,7 @@ public class ClientManager extends Thread {
             newUsername = username;
         }
         try{
-            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password);
+            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password, oldUsername);
             oout.writeObject(userManagementTCP);
             oout.flush();
         } catch (IOException e) {
@@ -488,7 +488,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void editNameUsernamePassword(String newName, String newUsername, String password, String newPassword) {
+    public void editNameUsernamePassword(String newName, String newUsername, String password, String oldUsername, String newPassword) {
         if(newName.isEmpty()){
             newName = name;
         }
@@ -496,7 +496,7 @@ public class ClientManager extends Thread {
             newUsername = username;
         }
         try{
-            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password);
+            UserManagementTCP userManagementTCP = new UserManagementTCP(newName, newUsername, password, oldUsername);
             userManagementTCP.setNewPassword(newPassword);
             userManagementTCP.setAlteringPassword(true);
             oout.writeObject(userManagementTCP);

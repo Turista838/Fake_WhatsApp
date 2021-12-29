@@ -67,9 +67,9 @@ public class EditProfileDialog extends BorderPane {
         editProfileButton.setOnAction(ev -> {
             if(!oldPassField.getText().isEmpty()) {
                 if (newPassField.getText().isEmpty()) {
-                    clientManager.editNameUsername(editNameField.getText(), editUsernameField.getText(), oldPassField.getText());
+                    clientManager.editNameUsername(editNameField.getText(), editUsernameField.getText(), oldPassField.getText(), clientManager.getUsername());
                 } else {
-                    clientManager.editNameUsernamePassword(editNameField.getText(), editUsernameField.getText(), oldPassField.getText(), newPassField.getText());
+                    clientManager.editNameUsernamePassword(editNameField.getText(), editUsernameField.getText(), oldPassField.getText(), clientManager.getUsername(), newPassField.getText());
                 }
             }
             else{

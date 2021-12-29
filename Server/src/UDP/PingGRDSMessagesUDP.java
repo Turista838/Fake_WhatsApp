@@ -29,7 +29,7 @@ public class PingGRDSMessagesUDP extends Thread  {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ObjectOutputStream out = new ObjectOutputStream(baos);
                 out.writeObject(PING);
-                //out.flush(); caso n apreça a mensagem toda, despeja o buff
+
                 byte[] bytesToSend = baos.toByteArray();
 
                 DatagramPacket dp = new DatagramPacket(bytesToSend, bytesToSend.length, gbdsAddr, Integer.parseInt(grdsPort));

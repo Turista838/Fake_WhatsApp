@@ -62,6 +62,8 @@ public class MainServer {
 
         if(args.length == 2){
 
+            System.out.println("\n### Server initiated ###\n");
+
             grdsIP = args[0]; //IP GRDS
             grdsPort = args[1]; //Porto GRDS
             //TODO ir à pasta e sacar os nomes dos ficheiros

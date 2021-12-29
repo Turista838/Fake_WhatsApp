@@ -156,7 +156,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         if (isGroup) {
                             ((UpdateMessageListTCP) obj).setIsGroup(true);
                             rs = stmt.executeQuery("SELECT * FROM mensagem_de_grupo WHERE Grupo = \"" + ((UpdateMessageListTCP) obj).getContact() + "\";");
-                            while (rs.next()) { //TODO devem ser alteradas as flags de mensagem vista
+                            while (rs.next()) { //TODO devem ser alteradas as flags de mensagem vista (só está para user <-> user)
                                 ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                             }
                             rs = stmt.executeQuery("SELECT EXISTS(SELECT * from grupo WHERE User_Admin = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\" AND Nome = \"" + ((UpdateMessageListTCP) obj).getContact() + "\");");
@@ -261,15 +261,26 @@ public class ProcessClientMessagesTCP extends Thread {
                 }
 
                 if (obj instanceof UserManagementTCP) { //Editar Perfil
-                    rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((UserManagementTCP) obj).getUsername() + "\" AND Password = \"" + ((UserManagementTCP) obj).getPassword() + "\");");
+                    rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((UserManagementTCP) obj).getOldUsername() + "\" AND Password = \"" + ((UserManagementTCP) obj).getPassword() + "\");");
                     rs.next();
-                    if(rs.getBoolean(1)) {
-                        if (((UserManagementTCP) obj).getAlteringPassword()) { //é para alterar também a pass
-                            //stmt.executeUpdate("");
-                        } else { //é só para alterar o username
+                    if (rs.getBoolean(1)) {
+                        stmt.executeUpdate("SET SQL_SAFE_UPDATES = 0;");
+                        stmt.executeUpdate("SET FOREIGN_KEY_CHECKS=0;");
 
-                           //stmt.executeUpdate("UPDATE utilizador SET Nome = \"" + ((GroupManagementTCP)obj).getNewGroupName() + "\" WHERE (User_Admin = \"" + ((GroupManagementTCP)obj).getUsername() + "\" AND Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
-                        }
+                        stmt.executeUpdate("UPDATE utilizador SET Nome = \"" + ((UserManagementTCP) obj).getName() + "\" WHERE Username = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE utilizador SET Username = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Username = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE grupo SET User_Admin = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE User_Admin = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE inclui SET Utilizador_Username = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Utilizador_Username = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE mensagem_de_grupo SET Remetente = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Remetente = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE mensagem_de_pares SET Destinatario = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Destinatario = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE mensagem_de_pares SET Remetente = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Remetente = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE tem_o_contacto SET Username = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Username = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        stmt.executeUpdate("UPDATE tem_o_contacto SET Contacto = \"" + ((UserManagementTCP) obj).getUsername() + "\" WHERE Contacto = \"" + ((UserManagementTCP) obj).getOldUsername() + "\";");
+                        if (((UserManagementTCP) obj).getAlteringPassword())  //é para alterar também a pass
+                            stmt.executeUpdate("UPDATE utilizador SET Password = \"" + ((UserManagementTCP) obj).getNewPassword() + "\" WHERE Username = \"" + ((UserManagementTCP) obj).getUsername() + "\";");
+
+                        stmt.executeUpdate("SET SQL_SAFE_UPDATES = 1;");
+                        stmt.executeUpdate("SET FOREIGN_KEY_CHECKS = 1;");
                         //é preciso alterar nas mensagens e na tabela de grupo
                         sendUpdateMessageToServerClients(UPDATE_CONTACTS, clientsAffectedBySGBDChanges);
                     }
@@ -319,7 +330,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     if(((GroupManagementTCP)obj).isDeleting()){
                         System.out.println("Recebi GroupManagementTCP - isDeleting");
                         //TODO query de todos os membros desse grupo
-                        //TODO clientsAffectedBySGBDChanges
+                        //TODO clientsAffectedBySGBDChanges - add clientes que pertencem ao grupo
                         stmt.executeUpdate("DELETE FROM inclui WHERE Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
                         stmt.executeUpdate("DELETE FROM grupo WHERE User_Admin = \"" + ((GroupManagementTCP)obj).getUsername() + "\" AND Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\";");
                         ((GroupManagementTCP)obj).setDeletingSuccess(true);
@@ -329,7 +340,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     if(((GroupManagementTCP)obj).isExcluding()){
                         System.out.println("Recebi GroupManagementTCP - isExcluding");
                         //TODO query de todos os membros desse grupo
-                        //TODO clientsAffectedBySGBDChanges
+                        //TODO clientsAffectedBySGBDChanges - add clientes que pertencem ao grupo
                         stmt.executeUpdate("DELETE FROM inclui WHERE Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\") AND Utilizador_Username = \"" + ((GroupManagementTCP)obj).getSelectedUsername() + "\";");
                         ((GroupManagementTCP)obj).setExcludingSuccess(true);
                         oout.writeObject(obj);
@@ -347,8 +358,6 @@ public class ProcessClientMessagesTCP extends Thread {
                     }
                     oout.writeObject(obj);
                     oout.flush();
-//                    clientsAffectedBySGBDChanges.add(((AcceptOrRefuseRequestTCP) obj).getRequest());
-//                    sendUpdateMessageToClients(UPDATE_CONTACTS, clientsAffectedBySGBDChanges);
                 }
 
                 if (obj instanceof AcceptOrRefuseRequestTCP) { //Accept or Refuse Friend ou Group
