@@ -237,8 +237,10 @@ public class ClientManager extends Thread {
                 firePropertyChangeListener(VIEW_CHANGED);
 
             } catch (IOException | ClassNotFoundException e) {
-                e.printStackTrace();
-                return;
+                cs.closeServerSocket();
+                cs.connectGRDS();
+                oout = cs.getOout();
+                oin = cs.getOin();
             }
         }
     }

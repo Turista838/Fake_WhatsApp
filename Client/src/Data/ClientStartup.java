@@ -125,5 +125,12 @@ public class ClientStartup {
         return oin;
     }
 
-
+    public void closeServerSocket() {
+        try {
+            serverSocket.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 }

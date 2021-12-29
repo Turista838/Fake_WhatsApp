@@ -62,8 +62,6 @@ public class ProcessClientMessagesTCP extends Thread {
     public void run(){
 
        try{
-//            oout = new ObjectOutputStream(socket.getOutputStream());
-//            oin = new ObjectInputStream(socket.getInputStream());
 
             while(true) { //TODO alterar este true
                 Object obj = oin.readObject();
@@ -96,7 +94,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         clientList.addClientToClientList(((LoginMessageTCP) obj).getUsername(), oout);
                         client = ((LoginMessageTCP) obj).getUsername();
                     }
-                    System.out.println("Cliente " + ((LoginMessageTCP) obj).getUsername() + " logado neste servidor");
+                    System.out.println("Cliente " + ((LoginMessageTCP) obj).getUsername() + " [" + socket.getPort() + "] " + " logado neste servidor");
                     oout.writeObject(obj);
                     oout.flush();
                     //TODO actualizar a lista de como esse utilizador está online

@@ -104,6 +104,7 @@ public class MainServer {
 
                             if(obj instanceof String){
                                 if(obj.equals("Client")) { // Cliente conectado, lança thread para gestão de pedidos
+                                    System.out.println("entrei aqui");
                                     ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(FILES_FOLDER_PATH, filesList, in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
                                     processClientMessagesTCP.start();
                                 }

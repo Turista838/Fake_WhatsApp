@@ -7,20 +7,9 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class MainClient extends Application {
-    //public class MainClient{
 
     private static String arg0;
     private static String arg1;
-
-//    public static void main(String[] args) {
-//        if(args.length != 2){
-//            System.out.println("Arguments needed: <IP GRDS> <PORT GRDS>");
-//            return;
-//        }
-//        TextUserInterface ui = new TextUserInterface(new Client(args[0], args[1]));
-//        ui.launch();
-//    }
-
 
     public static void main(String[] args) {
         if(args.length != 2){
@@ -51,6 +40,4 @@ public class MainClient extends Application {
         primaryStage.show();
 
     }
-
-
 }
