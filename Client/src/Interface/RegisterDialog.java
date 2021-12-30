@@ -27,6 +27,7 @@ public class RegisterDialog extends BorderPane {
 
     public RegisterDialog(ClientManager clientManager, Stage stage){
         this.clientManager = clientManager;
+        this.stage = stage;
         this.setWidth(122);
         this.setHeight(555);
 

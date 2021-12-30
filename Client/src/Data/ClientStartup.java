@@ -104,13 +104,6 @@ public class ClientStartup {
         }catch(IOException e){
             System.out.println("Ocorreu um erro no acesso ao mySocket:\n\t"+e);
         }
-//        finally{ //TODO ATENÇÃO QUE O CLIENTE DEVE FECHAR O SOCKET CORRECTAMENTE QUANDO SAIR
-//            if(serverSocket != null){
-//                try {
-//                    serverSocket.close();
-//                } catch (IOException e) { }
-//            }
-//        }
     }
 
     public Socket getServerSocket() {

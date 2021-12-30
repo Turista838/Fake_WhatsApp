@@ -10,10 +10,15 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+
+import static Data.ClientManager.USER_EDIT_SUCCESSFUL;
+import static Data.ClientManager.VIEW_CHANGED;
 
 public class EditProfileDialog extends BorderPane {
 
     ClientManager clientManager;
+    Stage stage;
 
     private Text title, editNameText, editUsernameText, oldPassText, passInfoText, newPassText;
     private TextField editNameField, editUsernameField, oldPassField, newPassField;
@@ -26,8 +31,9 @@ public class EditProfileDialog extends BorderPane {
     private HBox oldPassBox;
     private HBox newPassBox;
 
-    public EditProfileDialog(ClientManager clientManager){
+    public EditProfileDialog(ClientManager clientManager, Stage stage){
         this.clientManager = clientManager;
+        this.stage = stage;
         this.setWidth(122);
         this.setHeight(555);
 
@@ -78,7 +84,16 @@ public class EditProfileDialog extends BorderPane {
                 alert.setHeaderText("You must enter your password");
                 alert.show();
             }
-
         });
+
+        clientManager.addPropertyChangeListener(USER_EDIT_SUCCESSFUL, evt->editSuccessful(stage));
+    }
+
+    private void editSuccessful(Stage stage) {
+        stage.close();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Profile information edited");
+        alert.setHeaderText("Profile information edited");
+        alert.show();
     }
 }

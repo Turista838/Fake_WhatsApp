@@ -18,7 +18,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
-import static Data.ClientManager.VIEW_CHANGED;
+import static Data.ClientManager.*;
 
 public class MainPane extends BorderPane {
 
@@ -126,6 +126,10 @@ public class MainPane extends BorderPane {
         //writeMessageBox.setTranslateX(247.5);
         writeMessageBox.setPadding(new Insets(10, 10, 10, 10));
 
+        removeUserButton.setVisible(false);
+        editGroupButton.setVisible(false);
+        infoGroupButton.setVisible(false);
+        leaveGroupButton.setVisible(false);
         removeMessageButton.setVisible(false);
         getFileButton.setVisible(false);
         removeFileButton.setVisible(false);
@@ -134,8 +138,13 @@ public class MainPane extends BorderPane {
             clientManager.deleteContact(selectedContact);
         });
 
+        leaveGroupButton.setOnAction(ev -> {
+            clientManager.leaveGroup(selectedContact);
+        });
+
         removeMessageButton.setOnAction(ev -> {
-            clientManager.eraseMessage(conversationList.getSelectionModel().getSelectedIndex());
+            int index = conversationList.getSelectionModel().getSelectedIndex();
+            //clientManager.eraseMessage(arraycenas.get(index));
         });
 
         removeFileButton.setOnAction(ev -> {
@@ -172,7 +181,7 @@ public class MainPane extends BorderPane {
 
         editProfileButton.setOnAction(ev -> {
             Stage stage = new Stage();
-            stage.setScene(new Scene(new EditProfileDialog(clientManager),400, 180));
+            stage.setScene(new Scene(new EditProfileDialog(clientManager, stage),400, 180));
             stage.initModality(Modality.NONE);
             stage.setResizable(false);
             stage.setTitle("Edit Profile");
@@ -216,19 +225,6 @@ public class MainPane extends BorderPane {
             }
         });
 
-        usersList.setOnMouseClicked(event -> {
-            selectedContactIndex = usersList.getSelectionModel().getSelectedIndex();
-            selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
-            if(selectedContact != null) {
-                if (selectedContact.substring(selectedContact.length() - 1).equals("*")) { //remover o *
-                    clientManager.removeAsterisk(selectedContact);
-                    selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
-                }
-                clientManager.setSelectedContact(selectedContact);
-                clientManager.requestMessages();
-            }
-        });
-
         sendFileButton.setOnMouseClicked(event -> {
             Stage stage = new Stage();
             FileChooser fileChooser = new FileChooser();
@@ -242,6 +238,19 @@ public class MainPane extends BorderPane {
             if(selectedMessage.contains("#Ficheiro: ")) {
                 selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
                 clientManager.downloadFile(selectedMessage);
+            }
+        });
+
+        usersList.setOnMouseClicked(event -> {
+            selectedContactIndex = usersList.getSelectionModel().getSelectedIndex();
+            selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
+            if(selectedContact != null) {
+                if (selectedContact.substring(selectedContact.length() - 1).equals("*")) { //remover o *
+                    clientManager.removeAsterisk(selectedContact);
+                    selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
+                }
+                clientManager.setSelectedContact(selectedContact);
+                clientManager.requestMessages();
             }
         });
 
@@ -264,20 +273,41 @@ public class MainPane extends BorderPane {
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
+        clientManager.addPropertyChangeListener(HIDE_SHOW_BUTTONS, evt->hideShowButtons());
+
+        clientManager.addPropertyChangeListener(USER_EDIT_SUCCESSFUL, evt->editChangeUsername());
 
         menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
                 CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
-        conversationListBox.setBackground(new Background(new BackgroundFill(Color.TURQUOISE,
-                CornerRadii.EMPTY,
-                Insets.EMPTY)));
-        readMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN,
-        CornerRadii.EMPTY,
                 Insets.EMPTY)));
         writeMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTPINK,
         CornerRadii.EMPTY,
                 Insets.EMPTY)));
 
+    }
+
+    private void editChangeUsername() {
+        username.setText(clientManager.getUsername());
+    }
+
+    private void hideShowButtons() {
+        if(clientManager.getContactIsGroup()){
+            removeUserButton.setVisible(false);
+            editGroupButton.setVisible(false);
+            infoGroupButton.setVisible(true);
+            leaveGroupButton.setVisible(true);
+            if(clientManager.getSelectedGroupIsAdmin()){
+                editGroupButton.setVisible(true);
+                infoGroupButton.setVisible(false);
+                leaveGroupButton.setVisible(false);
+            }
+        }
+        else{
+            removeUserButton.setVisible(true);
+            editGroupButton.setVisible(false);
+            infoGroupButton.setVisible(false);
+            leaveGroupButton.setVisible(false);
+        }
     }
 
     private void update() {
@@ -292,6 +322,8 @@ public class MainPane extends BorderPane {
 
         for (MessageList message : clientManager.getMessageList()) {
             conversationList.getItems().add(message.message);
+            // criar um array no inicio da classe com as datas
+            // add(message.timestamp)
         }
 
         usersList.getSelectionModel().select(selectedContactIndex);

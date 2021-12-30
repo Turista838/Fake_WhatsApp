@@ -9,7 +9,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -29,7 +28,7 @@ public class ClientManager extends Thread {
     private ArrayList<String> availableGroupsList;
     private ArrayList<String> selectedGroupMembersList;
     private ArrayList<String> pendingInvitesListUsers;
-    private HashMap pendingInvitesListGroups;
+    private ArrayList<String[]> pendingInvitesListGroups;
     private int nBytes;
     private byte [] buffer = new byte[4096];
 
@@ -55,6 +54,7 @@ public class ClientManager extends Thread {
     public final static String GROUP_EXCLUDING_SUCCESSFUL = "Group user excluded";
     public final static String USER_EDIT_SUCCESSFUL = "User name edited";
     public final static String USER_EDIT_NOT_SUCCESSFUL = "User name not edited";
+    public final static String HIDE_SHOW_BUTTONS = "Hide or Show Buttons";
 
     public ClientManager(ClientStartup cs){
         this.cs = cs;
@@ -142,10 +142,17 @@ public class ClientManager extends Thread {
 
                 if (obj instanceof UpdateMessageListTCP) { //Actualiza mensagens
                     UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) obj;
-                    selectedContactIsGroup = updateMessageListTCP.getIsGroup();
-                    selectedGroupIsAdmin = updateMessageListTCP.getIsAdmin();
+                    if(updateMessageListTCP.getIsGroup()) {
+                        selectedContactIsGroup = updateMessageListTCP.getIsGroup();
+                        selectedGroupIsAdmin = updateMessageListTCP.getIsAdmin();
+                    }
+                    else{
+                        selectedContactIsGroup = false;
+                        selectedGroupIsAdmin = false;
+                    }
+                    firePropertyChangeListener(HIDE_SHOW_BUTTONS);
                     if(!selectedContact.isEmpty()) {
-                        if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
+                        if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) {
                             msgList = updateMessageListTCP.getMessageList();
                         }
                     }
@@ -199,8 +206,10 @@ public class ClientManager extends Thread {
 
                 if (obj instanceof UserManagementTCP) { //Edita perfil
                     UserManagementTCP userManagementTCP = (UserManagementTCP) obj;
-                    if(userManagementTCP.getEditSuccessful())
+                    if(userManagementTCP.getEditSuccessful()) {
+                        username = userManagementTCP.getUsername();
                         firePropertyChangeListener(USER_EDIT_SUCCESSFUL);
+                    }
                     else
                         firePropertyChangeListener(USER_EDIT_NOT_SUCCESSFUL);
                 }
@@ -271,7 +280,7 @@ public class ClientManager extends Thread {
 
     public ArrayList<String> getPendingInvitesListUsers() { return pendingInvitesListUsers; }
 
-    public HashMap getPendingInvitesListGroups() { return pendingInvitesListGroups; }
+    public ArrayList<String[]> getPendingInvitesListGroups() { return pendingInvitesListGroups; }
 
     public boolean getContactIsGroup() { return selectedContactIsGroup; }
 
@@ -362,6 +371,16 @@ public class ClientManager extends Thread {
             EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedIndex, username, selectedContact, selectedContactIsGroup, true);
             eraseMessageOrFileTCP.setFileName(selectedFile);
             oout.writeObject(eraseMessageOrFileTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void leaveGroup(String selectedContact) {
+        try{
+            AbandonGroupTCP abandonGroupTCP = new AbandonGroupTCP( username, selectedContact);
+            oout.writeObject(abandonGroupTCP);
             oout.flush();
         } catch (IOException e) {
             e.printStackTrace();

@@ -181,7 +181,7 @@ public class MainServer {
                     succesfullConnection = true;
 
 
-                } catch (Exception e) { //TODO melhorar catches
+                } catch (Exception e) {
                     System.out.println("Problema:\n\t" + e);
                 } finally {
                     if (multicastSocket != null) {

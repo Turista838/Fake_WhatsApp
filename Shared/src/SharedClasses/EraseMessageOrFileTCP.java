@@ -21,31 +21,17 @@ public class EraseMessageOrFileTCP implements Serializable {
         this.isFile = isFile;
     }
 
-    public int getMessageIndex() {
-        return messageIndex;
-    }
+    public int getMessageIndex() { return messageIndex; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getUsername() { return username; }
 
-    public String getContact() {
-        return contact;
-    }
+    public String getContact() { return contact; }
 
-    public Boolean getGroup() {
-        return isGroup;
-    }
+    public Boolean getGroup() { return isGroup; }
 
-    public Boolean getFile() {
-        return isFile;
-    }
+    public Boolean getFile() { return isFile; }
 
-    public String getFileName() {
-        return fileName;
-    }
+    public String getFileName() { return fileName; }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
+    public void setFileName(String fileName) { this.fileName = fileName; }
 }

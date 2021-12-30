@@ -12,7 +12,7 @@ public class RequestUsersOrGroupsTCP implements Serializable { //request for: Al
     private String username;
     private ArrayList userOrGroupList;
     private ArrayList friendsRequests;
-    private HashMap groupsRequests;
+    private ArrayList groupsRequests;
     private boolean requestIsGroupList;
     private boolean requestIsPendingInvites;
 
@@ -25,7 +25,7 @@ public class RequestUsersOrGroupsTCP implements Serializable { //request for: Al
     public RequestUsersOrGroupsTCP(String username){ // Request Pending Invites List
         this.username = username;
         friendsRequests = new ArrayList<String>();
-        groupsRequests = new HashMap<String, String>();
+        groupsRequests = new ArrayList<String[]>();
         requestIsPendingInvites = true;
     }
 
@@ -39,7 +39,10 @@ public class RequestUsersOrGroupsTCP implements Serializable { //request for: Al
         friendsRequests.add(user);
     }
 
-    public void addGroupsRequests(String user, String groupName){ groupsRequests.put(user, groupName); }
+    public void addGroupsRequests(String user, String groupName){
+        String[] groupInfo = { user, groupName };
+        groupsRequests.add(groupInfo);
+    }
 
     public boolean isRequestIsGroupList() { return requestIsGroupList; }
 
@@ -49,5 +52,5 @@ public class RequestUsersOrGroupsTCP implements Serializable { //request for: Al
 
     public ArrayList getFriendsRequests() { return friendsRequests; }
 
-    public HashMap getGroupsRequests() { return groupsRequests; }
+    public ArrayList<String[]> getGroupsRequests() { return groupsRequests; }
 }
