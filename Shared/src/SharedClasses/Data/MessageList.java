@@ -1,6 +1,6 @@
 package SharedClasses.Data;
 
-import java.io.Serializable;
+import  java.io.Serializable;
 import java.sql.Timestamp;
 
 public class MessageList implements Serializable {

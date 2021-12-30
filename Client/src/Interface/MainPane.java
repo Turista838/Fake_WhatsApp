@@ -2,6 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import SharedClasses.Data.MessageList;
+import java.sql.Timestamp;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -17,12 +18,16 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static Data.ClientManager.*;
 
 public class MainPane extends BorderPane {
 
     private ClientManager clientManager;
+
+    private ArrayList<Timestamp> messageDatas;
 
     private String selectedContact;
     private String selectedMessage;
@@ -60,6 +65,7 @@ public class MainPane extends BorderPane {
 
     public MainPane(ClientManager clientManager, int width, int height){
         this.clientManager = clientManager;
+        messageDatas = new ArrayList<Timestamp>();
         setWidth(width);
         setHeight(height);
 
@@ -144,12 +150,13 @@ public class MainPane extends BorderPane {
 
         removeMessageButton.setOnAction(ev -> {
             int index = conversationList.getSelectionModel().getSelectedIndex();
-            //clientManager.eraseMessage(arraycenas.get(index));
+            clientManager.eraseMessage(messageDatas.get(index));
         });
 
         removeFileButton.setOnAction(ev -> {
             selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
-            clientManager.eraseFile(selectedMessage, conversationList.getSelectionModel().getSelectedIndex());
+            clientManager.eraseFile(selectedMessage, messageDatas.get(conversationList.getSelectionModel().getSelectedIndex()));
+            //clientManager.eraseFile(selectedMessage, conversationList.getSelectionModel().getSelectedIndex());
         });
 
         addUserButton.setOnAction(ev -> {
@@ -311,6 +318,7 @@ public class MainPane extends BorderPane {
     }
 
     private void update() {
+        messageDatas.clear();
         this.setVisible(clientManager.getLoggedIn());
         username.setText(clientManager.getUsername());
         usersList.getItems().clear();
@@ -324,7 +332,9 @@ public class MainPane extends BorderPane {
             conversationList.getItems().add(message.message);
             // criar um array no inicio da classe com as datas
             // add(message.timestamp)
+            messageDatas.add(message.timestamp);
         }
+
 
         usersList.getSelectionModel().select(selectedContactIndex);
     }

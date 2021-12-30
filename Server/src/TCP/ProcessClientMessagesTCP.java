@@ -450,25 +450,16 @@ public class ProcessClientMessagesTCP extends Thread {
 
                 if (obj instanceof EraseMessageOrFileTCP) {
 
-                                 //query para ver se a mensagem é do mesmo cliente que pede para apagar, se não for não faz nada
-
-                    if(((EraseMessageOrFileTCP) obj).getFile()){
-                        if(((EraseMessageOrFileTCP) obj).getGroup()){
-
-                        }
-                        else{
-
-                        }
-                    }
-                    else{
                         if(((EraseMessageOrFileTCP) obj).getGroup()){
                             // grupos
-                            stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
+                            stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Grupo = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
+                           // stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
                         }
                         else{
-                            stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
+                            stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Destinatario = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
+                          //  stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
                         }
-                    }
+
                 }
 
                     clientsAffectedBySGBDChanges.clear();

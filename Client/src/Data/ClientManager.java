@@ -8,6 +8,7 @@ import javafx.util.Duration;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -356,9 +357,9 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void eraseMessage(int selectedIndex) {
+    public void eraseMessage(Timestamp selectedDate) {
         try{
-            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedIndex, username, selectedContact, selectedContactIsGroup, false);
+            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedDate, username, selectedContact, selectedContactIsGroup, false);
             oout.writeObject(eraseMessageOrFileTCP);
             oout.flush();
         } catch (IOException e) {
@@ -366,9 +367,9 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void eraseFile(String selectedFile, int selectedIndex) {
+    public void eraseFile(String selectedFile, Timestamp selectedDate) {
         try{
-            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedIndex, username, selectedContact, selectedContactIsGroup, true);
+            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedDate, username, selectedContact, selectedContactIsGroup, true);
             eraseMessageOrFileTCP.setFileName(selectedFile);
             oout.writeObject(eraseMessageOrFileTCP);
             oout.flush();

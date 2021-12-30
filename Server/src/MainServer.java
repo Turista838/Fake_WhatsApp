@@ -57,7 +57,7 @@ public class MainServer {
         }
 
         try{
-            conn = DriverManager.getConnection(dbUrl, "root", "123456");
+            conn = DriverManager.getConnection(dbUrl, "root", "12chc3DINAMITE");
         }
         catch (SQLException throwables) {
             throwables.printStackTrace();
