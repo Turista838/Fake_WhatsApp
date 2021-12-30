@@ -1,4 +1,6 @@
 package Data;
+import UDP.ProcessServerMessagesUDP;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -54,5 +56,26 @@ public class ServerList {
         }while(!svInfo.isActive());
 
         return serverIpAndPort;
+    }
+
+    public void warnServersForFileSynchronization() {
+
+        String[] serverIpAndPort = new String[2];
+        ServerInfo svInfo;
+        int i = 0;
+
+        do{
+
+            svInfo = arrayServerList.get(i); //saca o primeiro da lista
+
+            serverIpAndPort[0] = svInfo.getServerIP();
+            serverIpAndPort[1] = String.valueOf(svInfo.getServerPort());
+
+            i++;
+
+        }while(!svInfo.isActive());
+
+        new ProcessServerMessagesUDP(serverIpAndPort[0], Integer.parseInt(serverIpAndPort[1]));
+
     }
 }

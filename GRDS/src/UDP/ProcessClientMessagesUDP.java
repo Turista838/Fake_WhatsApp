@@ -10,7 +10,6 @@ import java.net.DatagramSocket;
 
 public class ProcessClientMessagesUDP extends Thread {
 
-    private static final int MAX_SIZE = 10000;
     private DatagramSocket socket;
     private DatagramPacket packet;
     private GRDSClientMessageUDP clientMessageUDP;
@@ -42,7 +41,7 @@ public class ProcessClientMessagesUDP extends Thread {
             socket.send(packet);
 
 
-        } catch (IOException e) { //TODO melhorar try catch
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

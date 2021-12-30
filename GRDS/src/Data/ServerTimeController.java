@@ -1,5 +1,7 @@
 package Data;
 
+import UDP.ProcessServerMessagesUDP;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -34,8 +36,12 @@ public class ServerTimeController extends Thread {
                             System.out.println("Inactivo: " + svInfo.getServerIP() + " | " + svInfo.getServerPort());
                             svInfo.setActive(false);
                         }
-                        else // acordou
-                            svInfo.setActive(true);
+                        else {
+                            if(!svInfo.isActive()){
+                                svInfo.setActive(true);
+                                new ProcessServerMessagesUDP(svInfo.getServerIP(), svInfo.getServerPort());
+                            }
+                        };
 
                         if(time.getTimeInMillis() - svInfo.getLastTimeOnline().getTimeInMillis() > 60000) // remove
                         {

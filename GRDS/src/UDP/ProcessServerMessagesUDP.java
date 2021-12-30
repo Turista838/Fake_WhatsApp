@@ -38,6 +38,12 @@ public class ProcessServerMessagesUDP extends Thread {
         sendServersUpdateFiles();
     }
 
+    public ProcessServerMessagesUDP(String serverIp, int serverPort) {
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+        sendServersSyncFiles();
+    }
+
     public void sendServersUpdateClients(){
 
         try {
@@ -45,7 +51,7 @@ public class ProcessServerMessagesUDP extends Thread {
 
             for(ServerInfo serverInfo : serverList.arrayServerList){
 
-                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort) {
+                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort && serverInfo.isActive()) {
                     InetAddress serverAddr = null;
                     String serverIP = serverInfo.getServerIP();
                     int serverPort = serverInfo.getServerPort();
@@ -56,7 +62,7 @@ public class ProcessServerMessagesUDP extends Thread {
                     ByteArrayOutputStream bout = new ByteArrayOutputStream();
                     ObjectOutputStream oout = new ObjectOutputStream(bout);
 
-                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false);
+                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false, false);
                     grdsServerMessageUDP.setClientsAffectedBySGBDChanges(clientsAffectedBySGBDChanges);
                     grdsServerMessageUDP.setMessage(message);
                     oout.writeUnshared(grdsServerMessageUDP);
@@ -80,7 +86,7 @@ public class ProcessServerMessagesUDP extends Thread {
 
             for(ServerInfo serverInfo : serverList.arrayServerList){
 
-                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort) {
+                if(serverInfo.getServerIP() != serverIp && serverInfo.getServerPort() != serverPort && serverInfo.isActive()) {
                     InetAddress serverAddr = null;
                     String serverIP = serverInfo.getServerIP();
                     int serverPort = serverInfo.getServerPort();
@@ -91,7 +97,7 @@ public class ProcessServerMessagesUDP extends Thread {
                     ByteArrayOutputStream bout = new ByteArrayOutputStream();
                     ObjectOutputStream oout = new ObjectOutputStream(bout);
 
-                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true);
+                    GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true, false);
                     grdsServerMessageUDP.setFilesList(filesList);
                     grdsServerMessageUDP.setServerTCPData(serverIp, this.serverPort);
                     oout.writeUnshared(grdsServerMessageUDP);
@@ -107,6 +113,31 @@ public class ProcessServerMessagesUDP extends Thread {
             e.printStackTrace();
         }
 
+    }
+
+    private void sendServersSyncFiles() {
+
+        try {
+
+            InetAddress serverAddr = null;
+            String serverIP = serverIp;
+
+            serverAddr = InetAddress.getByName(serverIP);
+            DatagramSocket socketUDP = new DatagramSocket();
+
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            ObjectOutputStream oout = new ObjectOutputStream(bout);
+
+            GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, false, true);
+            oout.writeUnshared(grdsServerMessageUDP);
+
+            //send
+            DatagramPacket packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), serverAddr, serverPort);
+            socketUDP.send(packetUDP);
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
 }

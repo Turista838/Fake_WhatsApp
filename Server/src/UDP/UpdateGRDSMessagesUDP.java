@@ -37,13 +37,10 @@ public class UpdateGRDSMessagesUDP extends Thread {
 
     public void runUpdateClients(){ //envia ao GRDS
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false);
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(true, false, false);
         grdsServerMessageUDP.setMessage(message);
 
         try{
-            //InetAddress gbdsAddr = InetAddress.getByName(grdsIP);
-            //DatagramSocket socketUDP = new DatagramSocket();
-
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(bout);
             oout.writeUnshared(grdsServerMessageUDP);
@@ -58,15 +55,11 @@ public class UpdateGRDSMessagesUDP extends Thread {
 
     public void runRequestFiles(){ //envia ao GRDS
 
-        System.out.println("vou correr runRequestFiles()");
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true);
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, true, false);
         grdsServerMessageUDP.setFilesList(storedFilesList);
 
         try{
-            //InetAddress gbdsAddr = InetAddress.getByName(grdsIP);
-            //DatagramSocket socketUDP = new DatagramSocket();
-
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             ObjectOutputStream oout = new ObjectOutputStream(bout);
             oout.writeUnshared(grdsServerMessageUDP);

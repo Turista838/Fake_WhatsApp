@@ -5,7 +5,6 @@ import SharedClasses.FileMessageTCP;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class ProcessServerFilesDownloadTCP extends Thread {
 
@@ -24,7 +23,9 @@ public class ProcessServerFilesDownloadTCP extends Thread {
 
     public void run(){
 
+
         try{
+
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
@@ -49,7 +50,7 @@ public class ProcessServerFilesDownloadTCP extends Thread {
                     do {
                         nBytes = fileIn.read(buffer);
                         cont = cont + nBytes;
-                        if (nBytes > 0) { //porque pode vir nBytes = -1
+                        if (nBytes > 0) {
                             localFileOutputStream.write(buffer, 0, nBytes);
                         }
                     } while (cont != fileS);
@@ -58,14 +59,6 @@ public class ProcessServerFilesDownloadTCP extends Thread {
                 }
 
             }
-
-//            System.out.println("Lista de ficheiros: ");
-//            ArrayList<String> teste = filesList;
-//
-//            Collections.sort(filesList);
-//            for(int i = 0; i < teste.size(); i++)
-//                System.out.println("Ficheiro: " + teste.get(i));
-
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

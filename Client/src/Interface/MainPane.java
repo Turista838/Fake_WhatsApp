@@ -26,6 +26,7 @@ public class MainPane extends BorderPane {
 
     private String selectedContact;
     private String selectedMessage;
+    private int selectedContactIndex = 0;
 
     private ListView usersList;
     private ListView conversationList;
@@ -50,6 +51,7 @@ public class MainPane extends BorderPane {
     private Button removeUserButton;
     private Button leaveGroupButton;
     private Button editGroupButton;
+    private Button infoGroupButton;
     private Button sendMessageButton;
     private Button sendFileButton;
     private Button getFileButton;
@@ -69,16 +71,17 @@ public class MainPane extends BorderPane {
         messageTextField = new TextField();
 
         //Top Buttons
-        addUserButton = new Button("Add User");
+        addUserButton = new Button("Add Contact");
         joinGroupButton = new Button("Join Group");
         createGroupButton = new Button("Create Group");
         editProfileButton = new Button("Edit Profile");
         pendingInvitesButton = new Button("Pending Invites");
 
         //Bottom Buttons
-        removeUserButton = new Button("Remove User");
+        removeUserButton = new Button("Remove Contact");
         leaveGroupButton = new Button("Leave Group");
         editGroupButton = new Button("Edit Group");
+        infoGroupButton = new Button("Group Info");
         sendMessageButton = new Button("Send");
         sendFileButton = new Button("Send File");
         getFileButton = new Button("Get File");
@@ -117,7 +120,7 @@ public class MainPane extends BorderPane {
 
         conversationList.setPrefWidth(760);
 
-        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, getFileButton, removeMessageButton, removeFileButton);
+        writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, infoGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, getFileButton, removeMessageButton, removeFileButton);
         writeMessageBox.setAlignment(Pos.CENTER);
         setBottom(writeMessageBox);
         //writeMessageBox.setTranslateX(247.5);
@@ -126,6 +129,19 @@ public class MainPane extends BorderPane {
         removeMessageButton.setVisible(false);
         getFileButton.setVisible(false);
         removeFileButton.setVisible(false);
+
+        removeUserButton.setOnAction(ev -> {
+            clientManager.deleteContact(selectedContact);
+        });
+
+        removeMessageButton.setOnAction(ev -> {
+            clientManager.eraseMessage(conversationList.getSelectionModel().getSelectedIndex());
+        });
+
+        removeFileButton.setOnAction(ev -> {
+            selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
+            clientManager.eraseFile(selectedMessage, conversationList.getSelectionModel().getSelectedIndex());
+        });
 
         addUserButton.setOnAction(ev -> {
             Stage stage = new Stage();
@@ -147,7 +163,7 @@ public class MainPane extends BorderPane {
 
         createGroupButton.setOnAction(ev -> {
             Stage stage = new Stage();
-            stage.setScene(new Scene(new CreateGroupDialog(clientManager),300, 100));
+            stage.setScene(new Scene(new CreateGroupDialog(clientManager, stage),300, 100));
             stage.initModality(Modality.NONE);
             stage.setResizable(false);
             stage.setTitle("Create Group");
@@ -181,6 +197,15 @@ public class MainPane extends BorderPane {
             stage.show();
         });
 
+        infoGroupButton.setOnAction(ev -> {
+            Stage stage = new Stage();
+            stage.setScene(new Scene(new SeeGroupDialog(clientManager, selectedContact),400, 280));
+            stage.initModality(Modality.NONE);
+            stage.setResizable(false);
+            stage.setTitle("Group Info");
+            stage.show();
+        });
+
         sendMessageButton.setOnAction(ev -> {
             if(!messageTextField.getText().isEmpty()) {
                 if (clientManager.getContactIsGroup()) {
@@ -191,15 +216,17 @@ public class MainPane extends BorderPane {
             }
         });
 
-        //clique nos contactos faz update da conversa desse contacto
         usersList.setOnMouseClicked(event -> {
+            selectedContactIndex = usersList.getSelectionModel().getSelectedIndex();
             selectedContact = (String)usersList.getSelectionModel().getSelectedItem();
-            if(selectedContact.substring(selectedContact.length() - 1).equals("*")){ //remover o *
-                clientManager.removeAsterisk(selectedContact);
-                selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
+            if(selectedContact != null) {
+                if (selectedContact.substring(selectedContact.length() - 1).equals("*")) { //remover o *
+                    clientManager.removeAsterisk(selectedContact);
+                    selectedContact = selectedContact.substring(0, selectedContact.length() - 1);
+                }
+                clientManager.setSelectedContact(selectedContact);
+                clientManager.requestMessages();
             }
-            clientManager.setSelectedContact(selectedContact);
-            clientManager.requestMessages();
         });
 
         sendFileButton.setOnMouseClicked(event -> {
@@ -207,11 +234,7 @@ public class MainPane extends BorderPane {
             FileChooser fileChooser = new FileChooser();
             File selectedFile = fileChooser.showOpenDialog(stage);
             System.out.println(selectedFile);
-            if (clientManager.getContactIsGroup()) {
-                clientManager.sendGroupFile(selectedFile);
-            } else {
-                clientManager.sendDirectFile(selectedFile);
-            }
+            clientManager.sendDirectFile(selectedFile);
         });
 
         getFileButton.setOnMouseClicked(event -> {
@@ -224,15 +247,17 @@ public class MainPane extends BorderPane {
 
 
         conversationList.setOnMouseClicked(event -> {
-            if(conversationList.getSelectionModel().getSelectedItem().toString().contains("#Ficheiro:")){
-                removeMessageButton.setVisible(false);
-                getFileButton.setVisible(true);
-                removeFileButton.setVisible(true);
-            }
-            else{
-                removeMessageButton.setVisible(true);
-                getFileButton.setVisible(false);
-                removeFileButton.setVisible(false);
+            selectedMessage = (String)conversationList.getSelectionModel().getSelectedItem();
+            if(selectedMessage != null) {
+                if (conversationList.getSelectionModel().getSelectedItem().toString().contains("#Ficheiro:")) {
+                    removeMessageButton.setVisible(false);
+                    getFileButton.setVisible(true);
+                    removeFileButton.setVisible(true);
+                } else {
+                    removeMessageButton.setVisible(true);
+                    getFileButton.setVisible(false);
+                    removeFileButton.setVisible(false);
+                }
             }
         });
 
@@ -240,15 +265,15 @@ public class MainPane extends BorderPane {
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
 
 
-//        menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
-//                CornerRadii.EMPTY,
-//                Insets.EMPTY))); //TODO apagar (debug)
-//        conversationListBox.setBackground(new Background(new BackgroundFill(Color.TURQUOISE,
-//                CornerRadii.EMPTY,
-//                Insets.EMPTY)));
-//        readMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN,
-//        CornerRadii.EMPTY,
-//                Insets.EMPTY)));
+        menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
+                CornerRadii.EMPTY,
+                Insets.EMPTY))); //TODO apagar (debug)
+        conversationListBox.setBackground(new Background(new BackgroundFill(Color.TURQUOISE,
+                CornerRadii.EMPTY,
+                Insets.EMPTY)));
+        readMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTGREEN,
+        CornerRadii.EMPTY,
+                Insets.EMPTY)));
         writeMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTPINK,
         CornerRadii.EMPTY,
                 Insets.EMPTY)));
@@ -268,6 +293,8 @@ public class MainPane extends BorderPane {
         for (MessageList message : clientManager.getMessageList()) {
             conversationList.getItems().add(message.message);
         }
+
+        usersList.getSelectionModel().select(selectedContactIndex);
     }
 
 }

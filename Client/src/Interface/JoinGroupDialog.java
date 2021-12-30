@@ -49,6 +49,7 @@ public class JoinGroupDialog extends BorderPane {
     }
 
     private void update() {
+        availableGroupsList.getItems().clear();
         for (String group : clientManager.getAvailableGroupsList()) {
             availableGroupsList.getItems().add(group);
         }

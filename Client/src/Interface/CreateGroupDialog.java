@@ -9,10 +9,15 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+
+import static Data.ClientManager.GROUP_CREATING_NOT_SUCCESSFUL;
+import static Data.ClientManager.GROUP_CREATING_SUCCESSFUL;
 
 public class CreateGroupDialog extends BorderPane {
 
     ClientManager clientManager;
+    private Stage stage;
 
     private Text title, groupNameText, infoText;
     private TextField groupNameField;
@@ -22,8 +27,9 @@ public class CreateGroupDialog extends BorderPane {
     private VBox mainBox;
     private HBox groupNameBox;
 
-    public CreateGroupDialog(ClientManager clientManager){
+    public CreateGroupDialog(ClientManager clientManager, Stage stage){
         this.clientManager = clientManager;
+        this.stage = stage;
         this.setWidth(122);
         this.setHeight(555);
 
@@ -43,16 +49,27 @@ public class CreateGroupDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        clientManager.addPropertyChangeListener(GROUP_CREATING_SUCCESSFUL, evt->creatingSuccess(stage));
+
+        clientManager.addPropertyChangeListener(GROUP_CREATING_NOT_SUCCESSFUL, evt->creatingFailed());
 
         createButton.setOnAction(ev -> {
-            if(groupNameField.getText().isEmpty()){
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Group creation Failed");
-                alert.setHeaderText("Group name cannot be empty or there is already a Group with that name");
-                alert.show();
-            }
-            else
-                clientManager.createGroup(groupNameField.getText());
+            clientManager.createGroup(groupNameField.getText());
         });
+    }
+
+    private void creatingFailed() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Failed to create Group");
+        alert.setHeaderText("You create a group with an empty name or with the same name of a group that you are admin of");
+        alert.show();
+    }
+
+    private void creatingSuccess(Stage stage) {
+        stage.close();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Group successfully created");
+        alert.setHeaderText("Group successfully created");
+        alert.show();
     }
 }

@@ -10,6 +10,7 @@ public class FileMessageTCP implements Serializable {
     private String filename;
     private String username;
     private String selectedContact;
+    private Boolean selectedContactIsGroup = false;
     private Boolean uploading = false;
     private Boolean download = false;
 
@@ -40,4 +41,8 @@ public class FileMessageTCP implements Serializable {
     public long getFileSize() { return fileSize; }
 
     public String getFilename() { return filename; }
+
+    public void setSelectedContactIsGroup(Boolean selectedContactIsGroup) { this.selectedContactIsGroup = selectedContactIsGroup; }
+
+    public boolean getSelectedContactIsGroup() { return selectedContactIsGroup; }
 }

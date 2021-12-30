@@ -4,6 +4,7 @@ import TCP.ProcessClientMessagesTCP;
 import TCP.ProcessServerFilesRequestTCP;
 import UDP.PingGRDSMessagesUDP;
 import UDP.ProcessGRDSMessagesUDP;
+import UDP.UpdateGRDSMessagesUDP;
 
 import java.io.*;
 import java.net.*;
@@ -14,7 +15,6 @@ public class MainServer {
 
     public static final String FILES_FOLDER_PATH = "C:\\TempServer";
     public static final int MAX_SIZE = 10000;
-    public static final int TIMEOUT = 10; //segundos
     public static final String MULTICAST_IP = "230.30.30.30";
     public static final int MULTICAST_PORT = 3030;
     public static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
@@ -43,9 +43,12 @@ public class MainServer {
 
         MulticastSocket multicastSocket = null;
 
-        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, false);
+        GRDSServerMessageUDP grdsServerMessageUDP = new GRDSServerMessageUDP(false, false, false);
 
         Connection conn = null;
+
+        File files = new File(FILES_FOLDER_PATH);
+        String[] fileNames = files.list();
 
         try {
             Class.forName(JDBC_DRIVER);
@@ -60,24 +63,27 @@ public class MainServer {
             throwables.printStackTrace();
         }
 
+        for (String name : fileNames) {
+            filesList.add(name);
+        }
+
         if(args.length == 2){
 
             System.out.println("\n### Server initiated ###\n");
 
             grdsIP = args[0]; //IP GRDS
             grdsPort = args[1]; //Porto GRDS
-            //TODO ir à pasta e sacar os nomes dos ficheiros
 
             try{ //connectar ao GRDS UDP
 
                 grdsAddr = InetAddress.getByName(grdsIP);
                 socketUDP = new DatagramSocket();
-                //socket.setSoTimeout(TIMEOUT*1000);
-                //encapsular a mensagem
+
                 bout = new ByteArrayOutputStream();
                 oout = new ObjectOutputStream(bout);
+                grdsServerMessageUDP.setFilesList(filesList);
                 oout.writeUnshared(grdsServerMessageUDP);
-                //send
+
                 packetUDP = new DatagramPacket(bout.toByteArray(), bout.size(), grdsAddr, Integer.parseInt(grdsPort));
                 socketUDP.send(packetUDP);
 
@@ -86,6 +92,8 @@ public class MainServer {
 
                 ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList, filesList, FILES_FOLDER_PATH);
                 processGRDSMessagesUDP.start();
+
+                new UpdateGRDSMessagesUDP(filesList, socketUDP, grdsAddr, grdsPort); //pedir ao GRDS para sincronizar ficheiros com outros servidores
 
                 try{ //tratar de clientes TCP
 
@@ -106,7 +114,6 @@ public class MainServer {
 
                             if(obj instanceof String){
                                 if(obj.equals("Client")) { // Cliente conectado, lança thread para gestão de pedidos
-                                    System.out.println("entrei aqui");
                                     ProcessClientMessagesTCP processClientMessagesTCP = new ProcessClientMessagesTCP(FILES_FOLDER_PATH, filesList, in, out, socketTCP, clientList, conn, socketUDP, grdsAddr, grdsPort);
                                     processClientMessagesTCP.start();
                                 }
@@ -130,11 +137,13 @@ public class MainServer {
                     if(serverSocketTCP!=null){
                         try {
                             serverSocketTCP.close();
-                        } catch (IOException ex) {}
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 
-            }catch(Exception e){ //TODO melhorar catches
+            }catch(Exception e){
                 System.out.println("Problema:\n\t"+e);
             }finally{
                 if(socketUDP != null){

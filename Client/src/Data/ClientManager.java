@@ -87,11 +87,9 @@ public class ClientManager extends Thread {
 
                 if (obj instanceof String) { //Única mensagem que não tem classe personalizada
                     if(obj.equals("Update Contacts")) {
-                        System.out.println("Recebi STRING Update Contacts");
                         updateContactList();
                     }
                     if(obj.equals("Update Message")) {
-                        System.out.println("Recebi STRING Update Message");
                         requestMessages();
                     }
                 }
@@ -139,7 +137,6 @@ public class ClientManager extends Thread {
 
                 if (obj instanceof UpdateContactListTCP) { //Actualiza lista contactos
                     UpdateContactListTCP updateContactListTCP = (UpdateContactListTCP) obj;
-                    System.out.println("Sou " + username + " e cheguei aqui");
                     contactList = updateContactListTCP.getContactList();
                 }
 
@@ -147,8 +144,6 @@ public class ClientManager extends Thread {
                     UpdateMessageListTCP updateMessageListTCP = (UpdateMessageListTCP) obj;
                     selectedContactIsGroup = updateMessageListTCP.getIsGroup();
                     selectedGroupIsAdmin = updateMessageListTCP.getIsAdmin();
-                    System.out.println("selected contact: " + selectedContact);
-                    System.out.println("updateMessageListTCP.getContact(): " + updateMessageListTCP.getContact());
                     if(!selectedContact.isEmpty()) {
                         if (Objects.equals(selectedContact, updateMessageListTCP.getContact())) { //cliente está a ver as mensagens em directo
                             msgList = updateMessageListTCP.getMessageList();
@@ -187,7 +182,7 @@ public class ClientManager extends Thread {
                             firePropertyChangeListener(GROUP_EDIT_NOT_SUCCESSFUL);
                     }
                     if(groupManagementTCP.isCreating()){
-                        if(groupManagementTCP.getEditingSuccess())
+                        if(groupManagementTCP.getCreatingSuccess())
                             firePropertyChangeListener(GROUP_CREATING_SUCCESSFUL);
                         else
                             firePropertyChangeListener(GROUP_CREATING_NOT_SUCCESSFUL);
@@ -233,7 +228,6 @@ public class ClientManager extends Thread {
                     requestMessages();
                 }
 
-                System.out.println("Disparei View Changed");
                 firePropertyChangeListener(VIEW_CHANGED);
 
             } catch (IOException | ClassNotFoundException e) {
@@ -343,7 +337,35 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void sendGroupFile(File selectedFile) {
+    public void deleteContact(String selectedContact) {
+        try{
+            DeleteContactTCP deleteContactTCP = new DeleteContactTCP(username, selectedContact);
+            oout.writeObject(deleteContactTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void eraseMessage(int selectedIndex) {
+        try{
+            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedIndex, username, selectedContact, selectedContactIsGroup, false);
+            oout.writeObject(eraseMessageOrFileTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void eraseFile(String selectedFile, int selectedIndex) {
+        try{
+            EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedIndex, username, selectedContact, selectedContactIsGroup, true);
+            eraseMessageOrFileTCP.setFileName(selectedFile);
+            oout.writeObject(eraseMessageOrFileTCP);
+            oout.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendDirectFile(File selectedFile) {
@@ -352,6 +374,8 @@ public class ClientManager extends Thread {
         try {
             FileMessageTCP fileMessageTCP = new FileMessageTCP(username, selectedContact, selectedFile.length(), selectedFile.getName());
             fileMessageTCP.setUploading(true);
+            fileMessageTCP.setSelectedContactIsGroup(selectedContactIsGroup);
+
             oout.writeObject(fileMessageTCP);
             oout.flush();
             OutputStream fileOut = cs.getServerSocket().getOutputStream();
@@ -572,7 +596,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void addAsterisk(ArrayList<String> contacts) { //TODO meter cores em vez de asteriscos
+    public void addAsterisk(ArrayList<String> contacts) { //TODO grupo não fica com asterisco porquê?
         String temp;
         for(int i = 0; i < contactList.size(); i++){
             for(int j = 0; j < contacts.size(); j++){
@@ -585,7 +609,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void removeAsterisk(String selectedContact) { //TODO está a apagar os asteriscos todos, só devia apagar do contacto selecionado
+    public void removeAsterisk(String selectedContact) {
         String temp;
         if(selectedContact.substring(selectedContact.length() - 1).equals("*")){ //remover o *
             this.selectedContact = selectedContact.substring(0, selectedContact.length() - 1);

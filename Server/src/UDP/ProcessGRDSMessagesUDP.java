@@ -41,20 +41,17 @@ public class ProcessGRDSMessagesUDP extends Thread {
                 socketUDP.receive(packetUDP);
                 ByteArrayInputStream bin = new ByteArrayInputStream(packetUDP.getData(), 0, packetUDP.getLength());
                 ObjectInputStream oin = new ObjectInputStream(bin);
-                System.out.println("recebi mensagem e processei na thread ProcessGRDSMessagesUDP");
+
                 GRDSServerMessageUDP grdsServerMessageUDP = (GRDSServerMessageUDP)oin.readObject();
 
                 if(grdsServerMessageUDP.isUpdateBDconnection()){
-                    System.out.println("vou enviar aos clientes");
                     ArrayList<ClientInfo> cList = clientList.getArrayClientList();
                     for(ClientInfo c : cList){
                         ObjectOutputStream ooutDest = c.getOout();
                         try {
                             String m = grdsServerMessageUDP.getMessage();
-                            System.out.println("m = " + m);
                             ooutDest.writeObject(m);
                             ooutDest.flush();
-                            System.out.println("enviei ao cliente " + c.getUsername());
                         } catch (Exception IOException) {
                             IOException.printStackTrace();
                         }
@@ -64,12 +61,14 @@ public class ProcessGRDSMessagesUDP extends Thread {
                 if(grdsServerMessageUDP.notifyServersToDownloadFiles()){ //estabelece connecção para receber ficheiros do servidor que enviou notificação ao GRDS
 
                     InetAddress serverAddr = InetAddress.getByName(grdsServerMessageUDP.getFileServerIp());
-                    System.out.println("IP: " + grdsServerMessageUDP.getFileServerIp());
-                    System.out.println("Porto: " + grdsServerMessageUDP.getFileServerPort());
                     Socket socket = new Socket(serverAddr, grdsServerMessageUDP.getFileServerPort()); //criar socket TCP
                     filesList = grdsServerMessageUDP.getFilesList(); //para sincronizar todas as listas
                     new ProcessServerFilesDownloadTCP(filesFolderPath, filesList, socket);
 
+                }
+
+                if(grdsServerMessageUDP.getServerNeedsToSyncronizeFiles()){ //Pede ficheiros assim que um novo servidor se liga
+                    new UpdateGRDSMessagesUDP(filesList, socketUDP, packetUDP.getAddress(), String.valueOf(packetUDP.getPort()));
                 }
 
 

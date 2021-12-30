@@ -18,7 +18,7 @@ public class EditGroupDialog extends BorderPane {
 
     ClientManager clientManager;
     private String selectedGroup;
-    private  Stage stage;
+    private Stage stage;
 
     private Text title, editGroupNameText;
     private TextField editGroupNameField;
@@ -38,7 +38,7 @@ public class EditGroupDialog extends BorderPane {
         this.selectedGroup = selectedGroup;
         this.stage = stage;
 
-        title = new Text("Edit Group");
+        title = new Text("Edit Group: " + selectedGroup);
         editGroupNameText = new Text("New Group name:");
         editGroupNameField = new TextField();
 
@@ -67,7 +67,11 @@ public class EditGroupDialog extends BorderPane {
 
         banUserButton.setOnAction(ev -> {
             String selectedUser = (String) currentMembersList.getSelectionModel().getSelectedItem();
-            clientManager.banUserFromGroup(selectedGroup, selectedUser);
+            if(selectedUser.equals(clientManager.getUsername())){
+                excludingFailed();
+            }
+            else
+                clientManager.banUserFromGroup(selectedGroup, selectedUser);
         });
 
         deleteGroupButton.setOnAction(ev -> {
@@ -80,10 +84,6 @@ public class EditGroupDialog extends BorderPane {
 
         clientManager.addPropertyChangeListener(GROUP_EDIT_NOT_SUCCESSFUL, evt->editFailed());
 
-        clientManager.addPropertyChangeListener(GROUP_CREATING_SUCCESSFUL, evt->creatingSuccess());
-
-        clientManager.addPropertyChangeListener(GROUP_CREATING_NOT_SUCCESSFUL, evt->creatingFailed());
-
         clientManager.addPropertyChangeListener(GROUP_DELETING_SUCCESSFUL, evt->deletingSuccess(stage));
 
         clientManager.addPropertyChangeListener(GROUP_EXCLUDING_SUCCESSFUL, evt->excludingSuccess());
@@ -91,6 +91,7 @@ public class EditGroupDialog extends BorderPane {
     }
 
     private void requestGroupUsers() {
+        currentMembersList.getItems().clear();
         for (String members : clientManager.getSelectedGroupMembersList()) {
             currentMembersList.getItems().add(members);
         }
@@ -106,19 +107,7 @@ public class EditGroupDialog extends BorderPane {
     private void editSuccess() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Group name successfully edited");
-        alert.show();
-    }
-
-    private void creatingFailed() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Failed to create Group");
-        alert.setHeaderText("You create a group with an empty name or with the same name of a group that you are admin of");
-        alert.show();
-    }
-
-    private void creatingSuccess() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Group successfully created");
+        alert.setHeaderText("Group name successfully edited");
         alert.show();
     }
 
@@ -126,12 +115,21 @@ public class EditGroupDialog extends BorderPane {
         stage.close();
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Group successfully deleted");
+        alert.setHeaderText("Group successfully deleted");
         alert.show();
     }
 
     private void excludingSuccess() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("User successfully excluded");
+        alert.setHeaderText("User successfully excluded");
+        alert.show();
+    }
+
+    private void excludingFailed() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("User failed to be excluded");
+        alert.setHeaderText("You cannot exclude yourself. You need to delete the group.");
         alert.show();
     }
 

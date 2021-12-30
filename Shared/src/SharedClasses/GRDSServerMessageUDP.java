@@ -13,10 +13,12 @@ public class GRDSServerMessageUDP implements Serializable {
     private ArrayList filesList;
     private String fileServerIp;
     private int fileServerPort;
+    private Boolean serverNeedsToSyncronizeFiles = false;
 
-    public GRDSServerMessageUDP(Boolean updateBDconnection, Boolean handleFiles){
+    public GRDSServerMessageUDP(Boolean updateBDconnection, Boolean handleFiles, Boolean syncFiles){
         this.updateBDconnection = updateBDconnection;
         this.handleFiles = handleFiles;
+        this.serverNeedsToSyncronizeFiles = syncFiles;
         clientsAffectedBySGBDChanges = new ArrayList<String>();
         filesList = new ArrayList<String>();
     }
@@ -46,4 +48,5 @@ public class GRDSServerMessageUDP implements Serializable {
 
     public int getFileServerPort() { return fileServerPort; }
 
+    public Boolean getServerNeedsToSyncronizeFiles() { return serverNeedsToSyncronizeFiles; }
 }

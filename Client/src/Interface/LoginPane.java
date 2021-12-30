@@ -84,12 +84,9 @@ public class LoginPane extends BorderPane {
 
         register.setOnAction(event -> {
             Stage stage = new Stage();
-            stage.setScene(new Scene(new RegisterDialog(clientManager),200, 200));
+            stage.setScene(new Scene(new RegisterDialog(clientManager, stage),200, 200));
             stage.initModality(Modality.APPLICATION_MODAL);
-            //stage.setX(primaryStage.getX()+200+Math.random()*100);
-            //stage.setY(primaryStage.getY()+200+Math.random()*100);
             stage.setResizable(false);
-            //stage.setOnCloseRequest(ev -> Platform.exit());
             stage.show();
         });
 

@@ -48,7 +48,6 @@ public class ProcessServerFilesRequestTCP extends Thread { //envia ficheiros aos
                 FileInputStream fileInputStream = new FileInputStream(filesFolderPath + "\\" + filesList.get(i));
                 do {
                     nBytes = fileInputStream.read(fileChunk);
-                    System.out.println("Documento tem nBytes = " + nBytes);
                     if (nBytes != -1) {// enquanto não é EOF
                         fileOut.write(fileChunk, 0, nBytes);
                         fileOut.flush();

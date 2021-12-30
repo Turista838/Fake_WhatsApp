@@ -6,6 +6,7 @@ import UDP.*;
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.ArrayList;
 
 public class MainGRDS {
 
@@ -61,8 +62,8 @@ public class MainGRDS {
                                 new ProcessServerMessagesUDP(((GRDSServerMessageUDP) obj).getFilesList(), serverList, packet.getAddress().getHostAddress(), packet.getPort());
                             }
                             else {
-                                System.out.println("Porto do servidor conectado: " + packet.getPort());
                                 serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort()); //sincronizar
+                                serverList.warnServersForFileSynchronization();
                             }
                         }
                     }
