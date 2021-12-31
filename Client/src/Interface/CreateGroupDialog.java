@@ -32,7 +32,7 @@ public class CreateGroupDialog extends BorderPane {
         this.clientManager = clientManager;
         this.stage = stage;
         this.setWidth(122);
-        this.setHeight(555);
+        this.setHeight(755);
 
         title = new Text("Create Group");
         groupNameText = new Text("Group Name:");
@@ -45,10 +45,15 @@ public class CreateGroupDialog extends BorderPane {
         groupNameBox = new HBox();
         groupNameBox.getChildren().addAll(groupNameText, groupNameField);
 
-        mainBox = new VBox();
+        mainBox = new VBox(2);
         mainBox.getChildren().addAll(title, groupNameBox, infoText, createButton);
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
+
+        title.setStyle(BASICSECUNDARYTITLE);
+        groupNameText.setStyle(BASICSMALLTEXTSTYLE);
+        infoText.setStyle(BASICSMALLTEXTSTYLE);
+        createButton.setStyle(BASICBUTTON);
 
         clientManager.addPropertyChangeListener(GROUP_CREATING_SUCCESSFUL, evt->creatingSuccess(stage));
 

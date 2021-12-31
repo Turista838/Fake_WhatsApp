@@ -9,6 +9,7 @@ public class Constants {
     public static String BASICSECUNDARYTITLE = "-fx-font: 18 arial;";
     public static String SMALLTEXTSTYLE = "-fx-font: 12 arial; -fx-fill: #FACE7F;";
     public static String BASICSMALLTEXTSTYLE = "-fx-font: 12 arial;";
+    public static String USERNAMETEXTSTYLE = "-fx-font: 30 arial;";
     public static String LISTVIEWSTYLE = "-fx-selection-bar: #FCF0C8;";
 
 }

@@ -57,6 +57,11 @@ public class PendingInvitesDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        title.setStyle(BASICSECUNDARYTITLE);
+        pendingInvitesList.setStyle(LISTVIEWSTYLE);
+        acceptButton.setStyle(BASICBUTTON);
+        refuseButton.setStyle(BASICBUTTON);
+
         clientManager.requestPendingInvitesList();
 
         clientManager.addPropertyChangeListener(UPDATE_REQUESTS, evt->updateRequests());

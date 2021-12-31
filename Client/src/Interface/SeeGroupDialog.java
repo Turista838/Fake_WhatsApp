@@ -40,6 +40,9 @@ public class SeeGroupDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        title.setStyle(BASICSECUNDARYTITLE);
+        currentMembersList.setStyle(LISTVIEWSTYLE);
+
         clientManager.requestGroupMembersList(selectedGroup);
 
         clientManager.addPropertyChangeListener(VIEW_GROUP_MEMBERS, evt->requestGroupUsers());

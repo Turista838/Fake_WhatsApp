@@ -22,7 +22,8 @@ public class LoginPane extends BorderPane {
 
     private Text title, usernameText, passwordText;
     private TextFlow registerText;
-    private TextField usernameField, passwordField;
+    private TextField usernameField;
+    private PasswordField passwordField;
     private Button loginButton;
 
     private VBox mainBox;
@@ -43,7 +44,7 @@ public class LoginPane extends BorderPane {
         Hyperlink createAccount   = showRegisterDialog(clientManager);
         registerText = new TextFlow( new Text("New?"), createAccount );
         usernameField = new TextField();
-        passwordField = new TextField();
+        passwordField = new PasswordField();
         loginButton = new Button("Login");
 
         mainBox = new VBox(24);

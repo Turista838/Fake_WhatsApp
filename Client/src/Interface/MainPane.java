@@ -265,17 +265,15 @@ public class MainPane extends BorderPane {
 
 
         conversationList.setOnMouseClicked(event -> {
-            if(selectedMessage != null) {
-                selectedMessage = unformattedMessage.get(conversationList.getSelectionModel().getSelectedIndex());
-                if (selectedMessage.contains("#Ficheiro:")) {
-                    removeMessageButton.setVisible(false);
-                    getFileButton.setVisible(true);
-                    removeFileButton.setVisible(true);
-                } else {
-                    removeMessageButton.setVisible(true);
-                    getFileButton.setVisible(false);
-                    removeFileButton.setVisible(false);
-                }
+            selectedMessage = unformattedMessage.get(conversationList.getSelectionModel().getSelectedIndex());
+            if (selectedMessage.contains("#Ficheiro:")) {
+                removeMessageButton.setVisible(false);
+                getFileButton.setVisible(true);
+                removeFileButton.setVisible(true);
+            } else {
+                removeMessageButton.setVisible(true);
+                getFileButton.setVisible(false);
+                removeFileButton.setVisible(false);
             }
         });
 
@@ -309,7 +307,11 @@ public class MainPane extends BorderPane {
         removeMessageButton.setStyle(BUTTONSTYLEMAIN);
         removeFileButton.setStyle(BUTTONSTYLEMAIN);
 
+        username.setStyle(USERNAMETEXTSTYLE);
+        messageText.setStyle(BASICSMALLTEXTSTYLE);
+
         usersList.setStyle(LISTVIEWSTYLE);
+        conversationList.setStyle(LISTVIEWSTYLE);
 
     }
 

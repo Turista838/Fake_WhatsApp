@@ -55,10 +55,17 @@ public class EditGroupDialog extends BorderPane {
         buttonsBox = new HBox();
         buttonsBox.getChildren().addAll(banUserButton, deleteGroupButton);
 
-        mainBox = new VBox();
+        mainBox = new VBox(8);
         mainBox.getChildren().addAll(title, editGroupNameBox, currentMembersList, buttonsBox);
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
+
+        title.setStyle(BASICSECUNDARYTITLE);
+        editGroupNameText.setStyle(BASICSMALLTEXTSTYLE);
+        editGroupNameButton.setStyle(BASICBUTTON);
+        banUserButton.setStyle(BASICBUTTON);
+        deleteGroupButton.setStyle(BASICBUTTON);
+        currentMembersList.setStyle(LISTVIEWSTYLE);
 
         clientManager.requestGroupMembersList(selectedGroup);
 

@@ -37,6 +37,10 @@ public class JoinGroupDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        title.setStyle(BASICSECUNDARYTITLE);
+        availableGroupsList.setStyle(LISTVIEWSTYLE);
+        joinGroupButton.setStyle(BASICBUTTON);
+
         clientManager.requestGroupList();
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());

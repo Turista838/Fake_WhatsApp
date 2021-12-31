@@ -2,10 +2,7 @@ package Interface;
 
 import Data.ClientManager;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -22,7 +19,8 @@ public class EditProfileDialog extends BorderPane {
     Stage stage;
 
     private Text title, editNameText, editUsernameText, oldPassText, passInfoText, newPassText;
-    private TextField editNameField, editUsernameField, oldPassField, newPassField;
+    private TextField editNameField, editUsernameField;
+    private PasswordField oldPassField, newPassField;
 
     private Button editProfileButton;
 
@@ -36,7 +34,7 @@ public class EditProfileDialog extends BorderPane {
         this.clientManager = clientManager;
         this.stage = stage;
         this.setWidth(122);
-        this.setHeight(555);
+        this.setHeight(1255);
 
         title = new Text("Edit Profile");
         editNameText = new Text("Change name:");
@@ -44,10 +42,10 @@ public class EditProfileDialog extends BorderPane {
         editUsernameText = new Text("New username:");
         editUsernameField = new TextField();
         oldPassText = new Text("Old password");
-        oldPassField = new TextField();
+        oldPassField = new PasswordField();
         passInfoText = new Text("Leave field below in blank if you don't want to change your password");
         newPassText = new Text("New password:");
-        newPassField = new TextField();
+        newPassField = new PasswordField();
 
         editProfileButton = new Button("Edit");
 
@@ -63,13 +61,21 @@ public class EditProfileDialog extends BorderPane {
         newPassBox = new HBox();
         newPassBox.getChildren().addAll(newPassText, newPassField);
 
-        mainBox = new VBox();
+        mainBox = new VBox(2);
         mainBox.getChildren().addAll(title, editNameBox, editUsernameBox, oldPassBox, passInfoText, newPassBox, editProfileButton);
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
         editNameField.setText(clientManager.getClientName());
         editUsernameField.setText(clientManager.getUsername());
+
+        title.setStyle(BASICSECUNDARYTITLE);
+        editNameText.setStyle(BASICSMALLTEXTSTYLE);
+        editUsernameText.setStyle(BASICSMALLTEXTSTYLE);
+        oldPassText.setStyle(BASICSMALLTEXTSTYLE);
+        passInfoText.setStyle(BASICSMALLTEXTSTYLE);
+        newPassText.setStyle(BASICSMALLTEXTSTYLE);
+        editProfileButton.setStyle(BASICBUTTON);
 
         editProfileButton.setOnAction(ev -> {
             if(!oldPassField.getText().isEmpty()) {

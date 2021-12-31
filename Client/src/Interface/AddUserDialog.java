@@ -37,6 +37,10 @@ public class AddUserDialog extends BorderPane {
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
 
+        title.setStyle(BASICSECUNDARYTITLE);
+        availableUsersList.setStyle(LISTVIEWSTYLE);
+        addUserButton.setStyle(BASICBUTTON);
+
         clientManager.requestUserList();
 
         clientManager.addPropertyChangeListener(VIEW_CHANGED, evt->update());
