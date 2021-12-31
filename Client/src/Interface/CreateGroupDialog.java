@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 
 import static Data.ClientManager.GROUP_CREATING_NOT_SUCCESSFUL;
 import static Data.ClientManager.GROUP_CREATING_SUCCESSFUL;
+import static Interface.Constants.*;
 
 public class CreateGroupDialog extends BorderPane {
 

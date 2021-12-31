@@ -57,7 +57,7 @@ public class MainServer {
         }
 
         try{
-            conn = DriverManager.getConnection(dbUrl, "root", "12chc3DINAMITE");
+            conn = DriverManager.getConnection(dbUrl, "root", "123456");
         }
         catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -99,7 +99,7 @@ public class MainServer {
 
                     serverSocketTCP = new ServerSocket(socketUDP.getLocalPort());
 
-                    while(true){ //TODO remover este true
+                    while(true){
 
                         try{
                             socketTCP = serverSocketTCP.accept();

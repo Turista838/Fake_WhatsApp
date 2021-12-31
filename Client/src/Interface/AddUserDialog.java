@@ -13,6 +13,7 @@ import javafx.scene.text.Text;
 
 import static Data.ClientManager.FRIEND_REQUEST;
 import static Data.ClientManager.VIEW_CHANGED;
+import static Interface.Constants.*;
 
 public class AddUserDialog extends BorderPane {
 

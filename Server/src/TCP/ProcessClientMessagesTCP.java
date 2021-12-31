@@ -162,7 +162,7 @@ public class ProcessClientMessagesTCP extends Thread {
                             ((UpdateMessageListTCP) obj).setIsGroup(true);
                             rs = stmt.executeQuery("SELECT * FROM mensagem_de_grupo WHERE Grupo = \"" + ((UpdateMessageListTCP) obj).getContact() + "\";");
                             while (rs.next()) {
-                                ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                                ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Remetente"), rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                             }
                             stmt.executeUpdate("UPDATE mensagem_de_grupo SET Visto = 1 WHERE Grupo = \"" + ((UpdateMessageListTCP) obj).getContact() + "\";");
                             rs = stmt.executeQuery("SELECT EXISTS(SELECT * from grupo WHERE User_Admin = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\" AND Nome = \"" + ((UpdateMessageListTCP) obj).getContact() + "\");");
@@ -177,7 +177,7 @@ public class ProcessClientMessagesTCP extends Thread {
                             ((UpdateMessageListTCP) obj).setIsAdmin(false);
                             rs = stmt.executeQuery("SELECT * from mensagem_de_pares WHERE (Remetente = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\" AND Destinatario = \"" + ((UpdateMessageListTCP) obj).getContact() + "\") OR (Remetente = \"" + ((UpdateMessageListTCP) obj).getContact() + "\" AND Destinatario = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\") ORDER BY Data;");
                             while (rs.next()) {
-                                ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                                ((UpdateMessageListTCP) obj).addMsgList(rs.getString("Remetente"), rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                             }
                             stmt.executeUpdate("UPDATE mensagem_de_pares SET Visto = 1 WHERE Remetente = \"" + ((UpdateMessageListTCP) obj).getContact() + "\" AND Destinatario = \"" + ((UpdateMessageListTCP) obj).getUsername() + "\";");
                         }
@@ -203,7 +203,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     updateMessageListTCP.setIsGroup(false); //!!!
                     rs = stmt.executeQuery("SELECT * from mensagem_de_pares WHERE (Remetente = \"" + ((DirectMessageTCP) obj).getSender() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getDestination() + "\") OR (Remetente = \"" + ((DirectMessageTCP) obj).getDestination() + "\" AND Destinatario = \"" + ((DirectMessageTCP) obj).getSender() + "\") ORDER BY Data;");
                     while (rs.next()) {
-                        updateMessageListTCP.addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                        updateMessageListTCP.addMsgList(rs.getString("Remetente"), rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                     }
                     oout.writeObject(updateMessageListTCP);
                     oout.flush();
@@ -225,7 +225,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         updateMessageListTCP.setIsAdmin(false);
                     rs = stmt.executeQuery("SELECT * FROM mensagem_de_grupo WHERE grupo = \"" + ((GroupMessageTCP) obj).getGroup() + "\";");
                     while (rs.next()) {
-                        updateMessageListTCP.addMsgList(rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
+                        updateMessageListTCP.addMsgList(rs.getString("Remetente"), rs.getString("Texto"), rs.getTimestamp("Data"), rs.getBoolean("Visto"), rs.getBoolean("Ficheiro"));
                     }
                     rs = stmt.executeQuery("SELECT DISTINCT Remetente FROM mensagem_de_grupo WHERE Grupo = \"" + ((GroupMessageTCP) obj).getGroup() + "\" AND NOT Remetente = \"" + ((GroupMessageTCP) obj).getSender() + "\";");
                     while (rs.next()) {
@@ -321,7 +321,7 @@ public class ProcessClientMessagesTCP extends Thread {
                 if (obj instanceof GroupManagementTCP) { //Actualiza Gestão de Grupo (Apenas admin tem acesso)
 
                     if(((GroupManagementTCP)obj).isConsulting()){ //retorna lista de membros desse grupo
-                        rs = stmt.executeQuery("SELECT DISTINCT inclui.Utilizador_Username FROM inclui, grupo WHERE Adicionado = 1 AND Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE User_Admin = \"" + ((GroupManagementTCP)obj).getUsername() + "\" AND Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
+                        rs = stmt.executeQuery("SELECT DISTINCT inclui.Utilizador_Username FROM inclui, grupo WHERE Adicionado = 1 AND Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((GroupManagementTCP)obj).getGroupName() + "\");");
                         while (rs.next()) {
                             ((GroupManagementTCP)obj).addGroupMember(rs.getString("Utilizador_Username"));
                             clientsAffectedBySGBDChanges.add(rs.getString("Utilizador_Username"));
@@ -449,21 +449,23 @@ public class ProcessClientMessagesTCP extends Thread {
                 }
 
                 if (obj instanceof EraseMessageOrFileTCP) {
-
-                        if(((EraseMessageOrFileTCP) obj).getGroup()){
-                            // grupos
-                            stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Grupo = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
-                           // stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
+                    if(((EraseMessageOrFileTCP) obj).getGroup()){
+                        stmt.executeUpdate("DELETE FROM mensagem_de_grupo WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Grupo = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
+                        rs = stmt.executeQuery("SELECT DISTINCT inclui.Utilizador_Username FROM inclui, grupo WHERE Adicionado = 1 AND Grupo_ID_Grupo = (SELECT ID_Grupo FROM grupo WHERE Nome = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\");");
+                        while (rs.next()) {
+                            clientsAffectedBySGBDChanges.add(rs.getString("Utilizador_Username"));
                         }
-                        else{
-                            stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Destinatario = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
-                          //  stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = (SELECT Data FROM ( SELECT Row_Number() Over (Order By Data) As RowNum, Data FROM mensagem_de_grupo) t WHERE RowNum = " + ((EraseMessageOrFileTCP) obj).getMessageIndex() + ");");
-                        }
-
+                    }
+                    else{
+                        stmt.executeUpdate("DELETE FROM mensagem_de_pares WHERE Data = \"" + ((EraseMessageOrFileTCP) obj).getMessageDate() + "\" AND Remetente = \"" + ((EraseMessageOrFileTCP) obj).getUsername() + "\" AND Destinatario = \"" + ((EraseMessageOrFileTCP) obj).getContact() + "\";");
+                        clientsAffectedBySGBDChanges.add(((EraseMessageOrFileTCP) obj).getContact());
+                    }
+                    sendUpdateMessageToServerClients(UPDATE_MESSAGES, clientsAffectedBySGBDChanges);
+                    oout.writeObject(UPDATE_MESSAGES);
+                    oout.flush();
                 }
 
-                    clientsAffectedBySGBDChanges.clear();
-
+                clientsAffectedBySGBDChanges.clear();
             }
 
         }catch(Exception e){
@@ -493,6 +495,7 @@ public class ProcessClientMessagesTCP extends Thread {
                     ooutDest.writeObject(message);
                     ooutDest.flush();
                 } catch (Exception IOException) {
+                    cList.remove(c);
                     //TODO remover da lista e colocá-lo como offline
                 }
             }

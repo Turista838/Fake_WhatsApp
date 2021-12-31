@@ -27,9 +27,9 @@ public class MainClient extends Application {
     public void start(Stage primaryStage) {
 
         ClientManager clientManager = new ClientManager(new ClientStartup(arg0, arg1));
-        RootPane rootPane = new RootPane(clientManager, 1000, 600);
+        RootPane rootPane = new RootPane(clientManager, 1200, 600);
 
-        Scene scene = new Scene(rootPane,1000,600);
+        Scene scene = new Scene(rootPane,1200,600);
 
         primaryStage.setResizable(false);
         primaryStage.setScene(scene);

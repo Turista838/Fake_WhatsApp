@@ -370,7 +370,6 @@ public class ClientManager extends Thread {
     public void eraseFile(String selectedFile, Timestamp selectedDate) {
         try{
             EraseMessageOrFileTCP eraseMessageOrFileTCP = new EraseMessageOrFileTCP(selectedDate, username, selectedContact, selectedContactIsGroup, true);
-            eraseMessageOrFileTCP.setFileName(selectedFile);
             oout.writeObject(eraseMessageOrFileTCP);
             oout.flush();
         } catch (IOException e) {

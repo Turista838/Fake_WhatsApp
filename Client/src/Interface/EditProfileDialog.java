@@ -14,6 +14,7 @@ import javafx.stage.Stage;
 
 import static Data.ClientManager.USER_EDIT_SUCCESSFUL;
 import static Data.ClientManager.VIEW_CHANGED;
+import static Interface.Constants.*;
 
 public class EditProfileDialog extends BorderPane {
 

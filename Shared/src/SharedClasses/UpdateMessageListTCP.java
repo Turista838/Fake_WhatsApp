@@ -36,8 +36,8 @@ public class UpdateMessageListTCP implements Serializable {
         return contact;
     }
 
-    public void addMsgList(String message, Timestamp timestamp, boolean seen, boolean file) {
-        msgList.add(new MessageList(message, timestamp, seen, file));
+    public void addMsgList(String origin, String message, Timestamp timestamp, boolean seen, boolean file) {
+        msgList.add(new MessageList(origin, message, timestamp, seen, file));
     }
 
     public void addContactsWithUnreadMessages(String contact) {

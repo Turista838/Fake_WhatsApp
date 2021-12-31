@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static Data.ClientManager.UPDATE_REQUESTS;
 import static Data.ClientManager.VIEW_CHANGED;
+import static Interface.Constants.*;
 
 public class PendingInvitesDialog extends BorderPane {
 

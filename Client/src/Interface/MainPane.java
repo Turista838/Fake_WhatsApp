@@ -22,12 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static Data.ClientManager.*;
+import static Interface.Constants.*;
 
 public class MainPane extends BorderPane {
 
     private ClientManager clientManager;
 
     private ArrayList<Timestamp> messageDatas;
+    private ArrayList<String> unformattedMessage;
 
     private String selectedContact;
     private String selectedMessage;
@@ -66,6 +68,7 @@ public class MainPane extends BorderPane {
     public MainPane(ClientManager clientManager, int width, int height){
         this.clientManager = clientManager;
         messageDatas = new ArrayList<Timestamp>();
+        unformattedMessage = new ArrayList<String>();
         setWidth(width);
         setHeight(height);
 
@@ -95,11 +98,11 @@ public class MainPane extends BorderPane {
         removeFileButton = new Button("Remove File");
 
         mainBox = new VBox();
-        menuBox = new HBox();
+        menuBox = new HBox(12);
         usersListBox = new VBox();
         conversationListBox = new VBox();
         readMessageBox = new HBox();
-        writeMessageBox = new HBox();
+        writeMessageBox = new HBox(6);
 
         mainBox.getChildren().addAll(menuBox, usersListBox, conversationListBox);
         mainBox.setAlignment(Pos.CENTER);
@@ -124,12 +127,12 @@ public class MainPane extends BorderPane {
         readMessageBox.setAlignment(Pos.CENTER);
         setCenter(readMessageBox);
 
-        conversationList.setPrefWidth(760);
+        conversationList.setPrefWidth(960);
 
         writeMessageBox.getChildren().addAll(removeUserButton, leaveGroupButton, editGroupButton, infoGroupButton, messageText, messageTextField, sendMessageButton, sendFileButton, getFileButton, removeMessageButton, removeFileButton);
         writeMessageBox.setAlignment(Pos.CENTER);
         setBottom(writeMessageBox);
-        //writeMessageBox.setTranslateX(247.5);
+
         writeMessageBox.setPadding(new Insets(10, 10, 10, 10));
 
         removeUserButton.setVisible(false);
@@ -156,7 +159,6 @@ public class MainPane extends BorderPane {
         removeFileButton.setOnAction(ev -> {
             selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
             clientManager.eraseFile(selectedMessage, messageDatas.get(conversationList.getSelectionModel().getSelectedIndex()));
-            //clientManager.eraseFile(selectedMessage, conversationList.getSelectionModel().getSelectedIndex());
         });
 
         addUserButton.setOnAction(ev -> {
@@ -241,7 +243,7 @@ public class MainPane extends BorderPane {
         });
 
         getFileButton.setOnMouseClicked(event -> {
-            selectedMessage = (String)conversationList.getSelectionModel().getSelectedItem();
+            selectedMessage = unformattedMessage.get(conversationList.getSelectionModel().getSelectedIndex());
             if(selectedMessage.contains("#Ficheiro: ")) {
                 selectedMessage = selectedMessage.replace("#Ficheiro: ", "");
                 clientManager.downloadFile(selectedMessage);
@@ -263,9 +265,9 @@ public class MainPane extends BorderPane {
 
 
         conversationList.setOnMouseClicked(event -> {
-            selectedMessage = (String)conversationList.getSelectionModel().getSelectedItem();
             if(selectedMessage != null) {
-                if (conversationList.getSelectionModel().getSelectedItem().toString().contains("#Ficheiro:")) {
+                selectedMessage = unformattedMessage.get(conversationList.getSelectionModel().getSelectedIndex());
+                if (selectedMessage.contains("#Ficheiro:")) {
                     removeMessageButton.setVisible(false);
                     getFileButton.setVisible(true);
                     removeFileButton.setVisible(true);
@@ -284,12 +286,30 @@ public class MainPane extends BorderPane {
 
         clientManager.addPropertyChangeListener(USER_EDIT_SUCCESSFUL, evt->editChangeUsername());
 
-        menuBox.setBackground(new Background(new BackgroundFill(Color.BROWN,
+        menuBox.setBackground(new Background(new BackgroundFill(Color.DARKRED,
                 CornerRadii.EMPTY,
                 Insets.EMPTY)));
-        writeMessageBox.setBackground(new Background(new BackgroundFill(Color.LIGHTPINK,
+        writeMessageBox.setBackground(new Background(new BackgroundFill(Color.DARKRED,
         CornerRadii.EMPTY,
                 Insets.EMPTY)));
+
+
+        addUserButton.setStyle(BUTTONSTYLEMAIN);
+        joinGroupButton.setStyle(BUTTONSTYLEMAIN);
+        createGroupButton.setStyle(BUTTONSTYLEMAIN);
+        editProfileButton.setStyle(BUTTONSTYLEMAIN);
+        pendingInvitesButton.setStyle(BUTTONSTYLEMAIN);
+        removeUserButton.setStyle(BUTTONSTYLEMAIN);
+        leaveGroupButton.setStyle(BUTTONSTYLEMAIN);
+        editGroupButton.setStyle(BUTTONSTYLEMAIN);
+        infoGroupButton.setStyle(BUTTONSTYLEMAIN);
+        sendMessageButton.setStyle(BUTTONSTYLEMAIN);
+        sendFileButton.setStyle(BUTTONSTYLEMAIN);
+        getFileButton.setStyle(BUTTONSTYLEMAIN);
+        removeMessageButton.setStyle(BUTTONSTYLEMAIN);
+        removeFileButton.setStyle(BUTTONSTYLEMAIN);
+
+        usersList.setStyle(LISTVIEWSTYLE);
 
     }
 
@@ -319,6 +339,7 @@ public class MainPane extends BorderPane {
 
     private void update() {
         messageDatas.clear();
+        unformattedMessage.clear();
         this.setVisible(clientManager.getLoggedIn());
         username.setText(clientManager.getUsername());
         usersList.getItems().clear();
@@ -329,9 +350,9 @@ public class MainPane extends BorderPane {
         }
 
         for (MessageList message : clientManager.getMessageList()) {
-            conversationList.getItems().add(message.message);
-            // criar um array no inicio da classe com as datas
-            // add(message.timestamp)
+            String formattedMessage = message.timestamp + " | " + (message.seen ? "vista" : "não vista") + " | " + message.origin + ": " + message.message;
+            conversationList.getItems().add(formattedMessage);
+            unformattedMessage.add(message.message);
             messageDatas.add(message.timestamp);
         }
 

@@ -13,6 +13,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import static Data.ClientManager.*;
+import static Interface.Constants.*;
 
 public class EditGroupDialog extends BorderPane {
 

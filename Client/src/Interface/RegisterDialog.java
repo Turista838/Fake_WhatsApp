@@ -11,6 +11,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import static Data.ClientManager.*;
+import static Interface.Constants.*;
 
 
 public class RegisterDialog extends BorderPane {
@@ -40,21 +41,36 @@ public class RegisterDialog extends BorderPane {
         usernameField = new TextField();
         passwordField = new TextField();
 
-        registerButton = new Button("Registar");
+        registerButton = new Button("Register");
 
-        mainBox = new VBox();
+        mainBox = new VBox(4);
         mainBox.getChildren().addAll(title, nameText, nameField, usernameText, usernameField, passwordText, passwordField, registerButton);
         mainBox.setAlignment(Pos.CENTER);
         setCenter(mainBox);
+
+        title.setStyle(BASICSECUNDARYTITLE);
+        nameText.setStyle(BASICSMALLTEXTSTYLE);
+        usernameText.setStyle(BASICSMALLTEXTSTYLE);
+        passwordText.setStyle(BASICSMALLTEXTSTYLE);
+        registerButton.setStyle(BASICBUTTON);
 
         clientManager.addPropertyChangeListener(REGISTER_SUCCESS, evt->registerSuccess(stage));
         clientManager.addPropertyChangeListener(REGISTER_FAILED, evt->registerFailed());
 
         registerButton.setOnAction(ev -> {
-
-            clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
+            if(nameField.getText().isEmpty() || usernameField.getText().isEmpty() || passwordField.getText().isEmpty())
+                registerFailedEmptySpaces();
+            else
+                clientManager.register(nameField.getText(), usernameField.getText(), passwordField.getText());
         });
 
+    }
+
+    private void registerFailedEmptySpaces() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Register Failed");
+        alert.setHeaderText("You must fill all fields");
+        alert.show();
     }
 
     private void registerSuccess(Stage stage) {

@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
 import static Data.ClientManager.*;
+import static Interface.Constants.*;
 
 public class JoinGroupDialog extends BorderPane {
 

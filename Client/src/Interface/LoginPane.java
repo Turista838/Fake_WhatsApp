@@ -14,6 +14,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import static Data.ClientManager.*;
+import static Interface.Constants.*;
 
 public class LoginPane extends BorderPane {
 
@@ -40,19 +41,17 @@ public class LoginPane extends BorderPane {
         usernameText = new Text("Username");
         passwordText = new Text("Password");
         Hyperlink createAccount   = showRegisterDialog(clientManager);
-        registerText = new TextFlow( new Text("Ainda não tem conta?"), createAccount );
+        registerText = new TextFlow( new Text("New?"), createAccount );
         usernameField = new TextField();
         passwordField = new TextField();
         loginButton = new Button("Login");
 
-        mainBox = new VBox();
+        mainBox = new VBox(24);
         titleBox = new HBox();
-        usernameBox = new HBox();
-        passwordBox = new HBox();
+        usernameBox = new HBox(8);
+        passwordBox = new HBox(8);
         loginBox = new HBox();
         registerBox = new HBox();
-
-        //this.getChildren().addAll(titleBox, usernameBox, passwordBox, registerBox);
 
         mainBox.getChildren().addAll(titleBox, usernameBox, passwordBox, loginBox, registerBox);
         mainBox.setAlignment(Pos.CENTER);
@@ -65,6 +64,10 @@ public class LoginPane extends BorderPane {
         passwordBox.getChildren().addAll(passwordText, passwordField);
         loginBox.getChildren().add(loginButton);
         registerBox.getChildren().add(registerText);
+        usernameBox.setAlignment(Pos.CENTER);
+        passwordBox.setAlignment(Pos.CENTER);
+        loginBox.setAlignment(Pos.CENTER);
+        registerBox.setAlignment(Pos.CENTER);
 
         loginButton.setOnAction(ev -> {
             clientManager.login(usernameField.getText(), passwordField.getText());
@@ -74,13 +77,23 @@ public class LoginPane extends BorderPane {
 
         clientManager.addPropertyChangeListener(LOGIN_FAILED, evt->loginFailed());
 
-        titleBox.setBackground(new Background(new BackgroundFill(Color.LIGHTCYAN,
+        mainBox.setBackground(new Background(new BackgroundFill(Color.DARKRED,
                 CornerRadii.EMPTY,
-                Insets.EMPTY))); //TODO apagar (debug)
+                Insets.EMPTY)));
+
+        registerBox.setBackground(new Background(new BackgroundFill(Color.NAVAJOWHITE,
+                CornerRadii.EMPTY,
+                Insets.EMPTY)));
+
+        loginButton.setStyle(BUTTONSTYLE);
+        title.setStyle(TITLESTYLE);
+        usernameText.setStyle(SMALLTEXTSTYLE);
+        passwordText.setStyle(SMALLTEXTSTYLE);
+
     }
 
     private Hyperlink showRegisterDialog(ClientManager clientManager) {
-        Hyperlink register = new Hyperlink("Carregue aqui para registar");
+        Hyperlink register = new Hyperlink("Click here to sign up");
 
         register.setOnAction(event -> {
             Stage stage = new Stage();
