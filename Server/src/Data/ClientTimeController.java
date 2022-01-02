@@ -12,13 +12,14 @@ public class ClientTimeController extends Thread{
     private Statement stmt;
     private String username;
     private ResultSet rs;
+    private Connection conn = null;
 
     public ClientTimeController(Connection conn, String username){
 
         this.username = username;
-
+        this.conn = conn;
         try{
-            stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
+            stmt = this.conn.createStatement(); //é a partir deste statement que se faz os comandos
         }
         catch (SQLException e) {
             e.printStackTrace();

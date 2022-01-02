@@ -38,6 +38,7 @@ public class ProcessClientMessagesTCP extends Thread {
     private int nBytes;
     private byte [] buffer = new byte[4096];
     private ArrayList storedFilesList;
+    private Connection conn = null;
 
     public final static String UPDATE_CONTACTS = "Update Contacts";
     public final static String UPDATE_MESSAGES = "Update Message";
@@ -54,8 +55,9 @@ public class ProcessClientMessagesTCP extends Thread {
         FILES_FOLDER_PATH = files_folder_path;
         clientsAffectedBySGBDChanges = new ArrayList<String>();
         rs = null;
+        this.conn = conn;
         try{
-            stmt = conn.createStatement(); //é a partir deste statement que se faz os comandos
+            stmt = this.conn.createStatement(); //é a partir deste statement que se faz os comandos
         }
         catch (SQLException e) {
             e.printStackTrace();
@@ -66,16 +68,16 @@ public class ProcessClientMessagesTCP extends Thread {
 
        try{
 
-            while(true) { //TODO alterar este true
+            while(true) {
                 Object obj = oin.readObject();
 
                 if (obj == null) { //EOF
                     return;
                 }
 
-                if(client != null) // Não estão a ser executados ambos
-                    stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + client + "\";"); // Utilizador mandou uma mensagem, é sinal que está online
-                    stmt.executeUpdate("UPDATE utilizador SET TimeStamp_Online = \"" + new Timestamp(System.currentTimeMillis()) + "\" WHERE Username = \"" + client + "\";");
+                if(!client.isEmpty())
+                    stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + client + "\";");
+                    stmt.executeUpdate("UPDATE utilizador SET TimeStamp_Online = CURRENT_TIMESTAMP WHERE Username = \"" + client + "\";");
 
 
                 if (obj instanceof RegisterMessageTCP) { //Processa Registo
@@ -99,7 +101,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         ((LoginMessageTCP) obj).setName(rs.getString("Nome"));
                         clientList.addClientToClientList(((LoginMessageTCP) obj).getUsername(), oout);
                         client = ((LoginMessageTCP) obj).getUsername();
-                        new ClientTimeController(stmt.getConnection(), ((LoginMessageTCP) obj).getUsername());
+                        new ClientTimeController(conn, ((LoginMessageTCP) obj).getUsername());
                         stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + ((LoginMessageTCP) obj).getUsername() + "\";");
                     }
                     System.out.println("Cliente " + ((LoginMessageTCP) obj).getUsername() + " [" + socket.getPort() + "] " + " logado neste servidor");
@@ -475,7 +477,18 @@ public class ProcessClientMessagesTCP extends Thread {
             }
 
         }catch(Exception e){
-           //TODO remover da lista e colocá-lo como offline
+           ArrayList<ClientInfo> cList = clientList.getArrayClientList();
+           for(ClientInfo c : cList){
+               if(Objects.equals(c.getUsername(), client)) {
+                   try {
+                       stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 0 WHERE Username = \"" + c.getUsername() + "\";");
+                   }
+                   catch (Exception ex){
+                       ex.printStackTrace();
+                   }
+                   cList.remove(c);
+               }
+           }
             e.printStackTrace();
             System.out.println("Problema na comunicação com o cliente " +
                     socket.getInetAddress().getHostAddress() + ":" +
@@ -489,7 +502,7 @@ public class ProcessClientMessagesTCP extends Thread {
         }
     }
 
-    private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges) throws SQLException {
+    private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges){
 
         new UpdateGRDSMessagesUDP(socketUDP, grdsIP, grdsPort, message, clientsAffectedBySGBDChanges);
 
@@ -501,15 +514,14 @@ public class ProcessClientMessagesTCP extends Thread {
                     ooutDest.writeObject(message);
                     ooutDest.flush();
                 } catch (Exception IOException) {
+                    try {
+                        stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 0 WHERE Username = \"" + c.getUsername() + "\";");
+                    }
+                    catch (Exception e){
+                        e.printStackTrace();
+                    }
                     cList.remove(c);
-                    //TODO remover da lista e colocá-lo como offline
-                    stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 0 WHERE Username = \"" + c.getUsername() + "\";");
                 }
-                rs = stmt.executeQuery("SELECT Flag_Online FROM utilizador WHERE Username = \"" + c.getUsername() + "\";");
-                rs.next();
-                int Flag_Online = rs.getInt("Flag_Online");
-                if (Flag_Online == 0)
-                    cList.remove(c);
             }
         }
     }
