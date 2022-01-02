@@ -2,6 +2,7 @@ package TCP;
 
 import Data.ClientInfo;
 import Data.ClientList;
+import Data.ClientTimeController;
 import SharedClasses.*;
 import UDP.UpdateGRDSMessagesUDP;
 
@@ -15,7 +16,9 @@ import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.Objects;
+import java.sql.Timestamp;
 
 
 public class ProcessClientMessagesTCP extends Thread {
@@ -70,8 +73,10 @@ public class ProcessClientMessagesTCP extends Thread {
                     return;
                 }
 
-                if(client != null)
+                if(client != null) // Não estão a ser executados ambos
                     stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + client + "\";"); // Utilizador mandou uma mensagem, é sinal que está online
+                    stmt.executeUpdate("UPDATE utilizador SET TimeStamp_Online = \"" + new Timestamp(System.currentTimeMillis()) + "\" WHERE Username = \"" + client + "\";");
+
 
                 if (obj instanceof RegisterMessageTCP) { //Processa Registo
                     rs = stmt.executeQuery("SELECT EXISTS(SELECT * from utilizador WHERE Username = \"" + ((RegisterMessageTCP) obj).getUsername() + "\");");
@@ -94,6 +99,7 @@ public class ProcessClientMessagesTCP extends Thread {
                         ((LoginMessageTCP) obj).setName(rs.getString("Nome"));
                         clientList.addClientToClientList(((LoginMessageTCP) obj).getUsername(), oout);
                         client = ((LoginMessageTCP) obj).getUsername();
+                        new ClientTimeController(stmt.getConnection(), ((LoginMessageTCP) obj).getUsername());
                         stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + ((LoginMessageTCP) obj).getUsername() + "\";");
                     }
                     System.out.println("Cliente " + ((LoginMessageTCP) obj).getUsername() + " [" + socket.getPort() + "] " + " logado neste servidor");
@@ -483,7 +489,7 @@ public class ProcessClientMessagesTCP extends Thread {
         }
     }
 
-    private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges) {
+    private void sendUpdateMessageToServerClients(String message, ArrayList clientsAffectedBySGBDChanges) throws SQLException {
 
         new UpdateGRDSMessagesUDP(socketUDP, grdsIP, grdsPort, message, clientsAffectedBySGBDChanges);
 
@@ -497,7 +503,13 @@ public class ProcessClientMessagesTCP extends Thread {
                 } catch (Exception IOException) {
                     cList.remove(c);
                     //TODO remover da lista e colocá-lo como offline
+                    stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 0 WHERE Username = \"" + c.getUsername() + "\";");
                 }
+                rs = stmt.executeQuery("SELECT Flag_Online FROM utilizador WHERE Username = \"" + c.getUsername() + "\";");
+                rs.next();
+                int Flag_Online = rs.getInt("Flag_Online");
+                if (Flag_Online == 0)
+                    cList.remove(c);
             }
         }
     }
