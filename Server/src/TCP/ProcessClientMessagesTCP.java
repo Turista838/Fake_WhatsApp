@@ -27,7 +27,7 @@ public class ProcessClientMessagesTCP extends Thread {
     private final Socket socket;
     private ObjectInputStream oin;
     private ObjectOutputStream oout;
-    private String client;
+    private String client = "";
     private ClientList clientList;
     private Statement stmt;
     private ResultSet rs;
@@ -75,9 +75,10 @@ public class ProcessClientMessagesTCP extends Thread {
                     return;
                 }
 
-                if(!client.isEmpty())
+                if(!client.isEmpty()) {
                     stmt.executeUpdate("UPDATE utilizador SET Flag_Online = 1 WHERE Username = \"" + client + "\";");
                     stmt.executeUpdate("UPDATE utilizador SET TimeStamp_Online = CURRENT_TIMESTAMP WHERE Username = \"" + client + "\";");
+                }
 
 
                 if (obj instanceof RegisterMessageTCP) { //Processa Registo
@@ -198,7 +199,6 @@ public class ProcessClientMessagesTCP extends Thread {
                     while (rs.next()) {
                         ((UpdateMessageListTCP) obj).addContactsWithUnreadMessages(rs.getString(1));
                     }
-                    //TODO adicionar grupo com mensagens não lidas
                     oout.writeObject(obj);
                     oout.flush();
                 }

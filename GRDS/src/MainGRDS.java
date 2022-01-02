@@ -37,7 +37,7 @@ public class MainGRDS {
             socket = new DatagramSocket(listeningPort);
             new ServerTimeController(serverList);
 
-            while(true){ //TODO tirar o true
+            while(true){
 
                 try{
                     packet = new DatagramPacket(new byte[MAX_SIZE], MAX_SIZE);

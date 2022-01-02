@@ -299,7 +299,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void login(String username, String password) { //TODO evitar no servidor que possa haver 2 logins com o mesmo utilizador
+    public void login(String username, String password) {
         try{
             LoginMessageTCP loginMessageTCP = new LoginMessageTCP(username, password);
             oout.writeObject(loginMessageTCP);
@@ -617,7 +617,7 @@ public class ClientManager extends Thread {
         }
     }
 
-    public void addAsterisk(ArrayList<String> contacts) { //TODO grupo não fica com asterisco porquê?
+    public void addAsterisk(ArrayList<String> contacts) {
         String temp;
         for(int i = 0; i < contactList.size(); i++){
             for(int j = 0; j < contacts.size(); j++){
