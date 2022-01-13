@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class MainServer {
 
-    public static final String FILES_FOLDER_PATH = "C:\\TempServer";
+    public static final String FILES_FOLDER_PATH = "C:\\TempServer2";
     public static final int MAX_SIZE = 10000;
     public static final String MULTICAST_IP = "230.30.30.30";
     public static final int MULTICAST_PORT = 3030;

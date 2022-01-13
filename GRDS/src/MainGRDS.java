@@ -1,18 +1,31 @@
 import Data.ServerList;
 import Data.ServerTimeController;
+import RMI.ProcessRemoteMessagesRMI;
 import SharedClasses.*;
+import SharedInterfaces.MainRemoteInterface;
 import UDP.*;
 
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.ArrayList;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NoSuchObjectException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.*;
 
 public class MainGRDS {
 
+    public static final String SERVICE_NAME = "GRDS_Service";
     private static final int MAX_SIZE = 10000;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws NoSuchObjectException {
+
+        ProcessRemoteMessagesRMI processRemoteMessagesRMI = null;
+        List<MainRemoteInterface> remoteObservers = new ArrayList<>();
 
         ServerList serverList = new ServerList();
         String[] serverIpAndPort = new String[2];
@@ -35,7 +48,29 @@ public class MainGRDS {
 
             listeningPort = Integer.parseInt(args[0]);
             socket = new DatagramSocket(listeningPort);
-            new ServerTimeController(serverList);
+
+            try{
+                //System.out.println("Tentativa de lancamento do registry no porto " + Registry.REGISTRY_PORT + "...");
+                LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+                //System.out.println("Registry lancado!");
+            }catch(RemoteException e){
+                System.out.println("Registry provavelmente ja' em execucao!");
+            }
+
+            processRemoteMessagesRMI = new ProcessRemoteMessagesRMI(serverList, remoteObservers);
+
+            new ServerTimeController(serverList, processRemoteMessagesRMI);
+
+            //System.out.println("Servico GetRemoteFile criado e em execucao ("+processRemoteMessagesRMI.getRef().remoteToString()+"...");
+//TODO apagar
+            /*
+             * Regista o servico no rmiregistry local para que os clientes possam localiza'-lo, ou seja,
+             * obter a sua referencia remota (endereco IP, porto de escuta, etc.).
+             */
+
+            Naming.bind("rmi://localhost/" + SERVICE_NAME, processRemoteMessagesRMI);
+
+            //System.out.println("Servico " + SERVICE_NAME + " registado no registry...");
 
             while(true){
 
@@ -50,6 +85,7 @@ public class MainGRDS {
 
                     if(obj instanceof GRDSClientMessageUDP){
                         serverIpAndPort = serverList.returnAvailableServer();
+                        processRemoteMessagesRMI.clientConnected(packet.getAddress().getHostAddress(), packet.getPort());
                         ProcessClientMessagesUDP processClientMessages = new ProcessClientMessagesUDP(socket, packet, (GRDSClientMessageUDP) obj, serverIpAndPort);
                         processClientMessages.start();
                     }
@@ -62,7 +98,7 @@ public class MainGRDS {
                                 new ProcessServerMessagesUDP(((GRDSServerMessageUDP) obj).getFilesList(), serverList, packet.getAddress().getHostAddress(), packet.getPort());
                             }
                             else {
-                                serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort()); //sincronizar
+                                serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort(), processRemoteMessagesRMI);
                                 serverList.warnServersForFileSynchronization();
                             }
                         }
@@ -83,14 +119,18 @@ public class MainGRDS {
                     e.printStackTrace();
                 }
             }
+
         }catch(NumberFormatException e){
             System.out.println("O porto de escuta deve ser um inteiro positivo.");
         }catch(IOException e){
             System.out.println("Ocorreu um erro ao nivel do socket de escuta:\n\t"+e);
-        }finally{
+        }catch(AlreadyBoundException e){
+            System.out.println("Ocorreu um erro ao nivel remoto:\n\t"+e);
+        } finally{
             if(socket!=null){
                 socket.close();
             }
+            UnicastRemoteObject.unexportObject(processRemoteMessagesRMI, true);
         }
     }
 }

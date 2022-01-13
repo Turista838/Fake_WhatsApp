@@ -1,9 +1,9 @@
 package Data;
+import RMI.ProcessRemoteMessagesRMI;
 import UDP.ProcessServerMessagesUDP;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 public class ServerList {
 
@@ -13,11 +13,12 @@ public class ServerList {
         arrayServerList = new ArrayList<>();
     }
 
-    public void checkAddServer(String hostAddress, int port){
+    public void checkAddServer(String hostAddress, int port, ProcessRemoteMessagesRMI processRemoteMessagesRMI) throws RemoteException {
 
         if(arrayServerList.isEmpty()){
             ServerInfo svInfo = new ServerInfo(hostAddress, port);
             arrayServerList.add(svInfo);
+            processRemoteMessagesRMI.serverAdded(svInfo.getServerIP(), svInfo.getServerPort());
             return;
         }
 
@@ -28,6 +29,7 @@ public class ServerList {
 
         ServerInfo svInfo = new ServerInfo(hostAddress, port);
         arrayServerList.add(svInfo);
+        processRemoteMessagesRMI.serverAdded(svInfo.getServerIP(), svInfo.getServerPort());
 
     }
 

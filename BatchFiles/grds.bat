@@ -1,3 +1,2 @@
-java -cp ..\out\production\GRDS\MainGRDS.class
+java -cp ..\Bin\GRDS MainGRDS 6000
 pause 
-

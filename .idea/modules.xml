@@ -5,6 +5,7 @@
       <module fileurl="file://$PROJECT_DIR$/Client/Client.iml" filepath="$PROJECT_DIR$/Client/Client.iml" />
       <module fileurl="file://$PROJECT_DIR$/GRDS/GRDS.iml" filepath="$PROJECT_DIR$/GRDS/GRDS.iml" />
       <module fileurl="file://$PROJECT_DIR$/PD_tp.iml" filepath="$PROJECT_DIR$/PD_tp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Remote/Remote.iml" filepath="$PROJECT_DIR$/Remote/Remote.iml" />
       <module fileurl="file://$PROJECT_DIR$/Server/Server.iml" filepath="$PROJECT_DIR$/Server/Server.iml" />
       <module fileurl="file://$PROJECT_DIR$/Shared/Shared.iml" filepath="$PROJECT_DIR$/Shared/Shared.iml" />
     </modules>
