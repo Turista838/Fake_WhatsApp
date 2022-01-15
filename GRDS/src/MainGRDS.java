@@ -61,16 +61,7 @@ public class MainGRDS {
 
             new ServerTimeController(serverList, processRemoteMessagesRMI);
 
-            //System.out.println("Servico GetRemoteFile criado e em execucao ("+processRemoteMessagesRMI.getRef().remoteToString()+"...");
-//TODO apagar
-            /*
-             * Regista o servico no rmiregistry local para que os clientes possam localiza'-lo, ou seja,
-             * obter a sua referencia remota (endereco IP, porto de escuta, etc.).
-             */
-
             Naming.bind("rmi://localhost/" + SERVICE_NAME, processRemoteMessagesRMI);
-
-            //System.out.println("Servico " + SERVICE_NAME + " registado no registry...");
 
             while(true){
 
@@ -92,10 +83,12 @@ public class MainGRDS {
                     if(obj instanceof GRDSServerMessageUDP){
                         if(((GRDSServerMessageUDP) obj).isUpdateBDconnection()){
                             new ProcessServerMessagesUDP(serverList, packet.getAddress().getHostAddress(), packet.getPort(), ((GRDSServerMessageUDP) obj).getClientsAffectedBySGBDChanges(), ((GRDSServerMessageUDP) obj).getMessage());
+                            processRemoteMessagesRMI.serverNotifiedGRDS(packet.getAddress().getHostAddress(), packet.getPort());
                         }
                         else {
                             if(((GRDSServerMessageUDP) obj).notifyServersToDownloadFiles()){
                                 new ProcessServerMessagesUDP(((GRDSServerMessageUDP) obj).getFilesList(), serverList, packet.getAddress().getHostAddress(), packet.getPort());
+                                processRemoteMessagesRMI.serverNotifiedGRDS(packet.getAddress().getHostAddress(), packet.getPort());
                             }
                             else {
                                 serverList.checkAddServer(packet.getAddress().getHostAddress(), packet.getPort(), processRemoteMessagesRMI);

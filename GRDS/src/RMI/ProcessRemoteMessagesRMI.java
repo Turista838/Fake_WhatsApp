@@ -22,15 +22,14 @@ public class ProcessRemoteMessagesRMI extends UnicastRemoteObject implements Pro
     public synchronized void addObserver(MainRemoteInterface observer) throws RemoteException {
         if(!remoteObservers.contains(observer)){
             remoteObservers.add(observer);
-            System.out.println("+ um observador.");
-
+            System.out.println("Adicionei um observador");
         }
     }
 
     public synchronized void removeObserver(MainRemoteInterface observer) throws RemoteException
     {
         if(remoteObservers.remove(observer))
-            System.out.println("- um observador.");
+            System.out.println("Um observador terminou");
     }
 
     public synchronized void requestServerList(MainRemoteInterface observer) throws RemoteException {
@@ -65,7 +64,7 @@ public class ProcessRemoteMessagesRMI extends UnicastRemoteObject implements Pro
                 results.clear();
             }catch(RemoteException e){
                 remoteObservers.remove(i--);
-                System.out.println("- um observador (observador inacessivel).");
+                System.out.println("Removi um observador (observador inacessível)");
             }
         }
     }
@@ -83,7 +82,7 @@ public class ProcessRemoteMessagesRMI extends UnicastRemoteObject implements Pro
                 results.clear();
             }catch(RemoteException e){
                 remoteObservers.remove(i--);
-                System.out.println("- um observador (observador inacessivel).");
+                System.out.println("Removi um observador (observador inacessível)");
             }
         }
     }
@@ -101,7 +100,26 @@ public class ProcessRemoteMessagesRMI extends UnicastRemoteObject implements Pro
                 results.clear();
             }catch(RemoteException e){
                 remoteObservers.remove(i--);
-                System.out.println("- um observador (observador inacessivel).");
+                System.out.println("Removi um observador (observador inacessível)");
+            }
+        }
+    }
+
+    public synchronized void serverNotifiedGRDS(String ip, int port) throws RemoteException
+    {
+        ArrayList<String> results = new ArrayList<>();
+
+        for(int i = 0; i < remoteObservers.size(); i++){
+            try{
+                results.add("Servidor: ");
+                results.add("IP: " + ip);
+                results.add("PORTO: " + String.valueOf(port));
+                results.add("Notificou GRDS");
+                remoteObservers.get(i).operationResult(results);
+                results.clear();
+            }catch(RemoteException e){
+                remoteObservers.remove(i--);
+                System.out.println("Removi um observador (observador inacessível)");
             }
         }
     }

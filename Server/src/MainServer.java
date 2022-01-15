@@ -93,7 +93,7 @@ public class MainServer {
                 ProcessGRDSMessagesUDP processGRDSMessagesUDP = new ProcessGRDSMessagesUDP(packetUDP, socketUDP, clientList, filesList, FILES_FOLDER_PATH);
                 processGRDSMessagesUDP.start();
 
-                new UpdateGRDSMessagesUDP(filesList, socketUDP, grdsAddr, grdsPort); //pedir ao GRDS para sincronizar ficheiros com outros servidores
+                //new UpdateGRDSMessagesUDP(filesList, socketUDP, grdsAddr, grdsPort); //pedir ao GRDS para sincronizar ficheiros com outros servidores
 
                 try{ //tratar de clientes TCP
 
