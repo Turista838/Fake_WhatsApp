@@ -50,11 +50,9 @@ public class MainGRDS {
             socket = new DatagramSocket(listeningPort);
 
             try{
-                //System.out.println("Tentativa de lancamento do registry no porto " + Registry.REGISTRY_PORT + "...");
                 LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-                //System.out.println("Registry lancado!");
             }catch(RemoteException e){
-                System.out.println("Registry provavelmente ja' em execucao!");
+                System.out.println("Registry provavelmente jé em execução!");
             }
 
             processRemoteMessagesRMI = new ProcessRemoteMessagesRMI(serverList, remoteObservers);

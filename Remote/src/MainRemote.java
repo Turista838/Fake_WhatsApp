@@ -53,8 +53,8 @@ public class MainRemote extends UnicastRemoteObject implements MainRemoteInterfa
 
             do{
                 value = s.nextInt();
-                if(value < 1 || value > 4)
-                    System.out.println("Introduza num 1 a 4");
+                if(value < 1 || value > 2)
+                    System.out.println("Introduza num 1 a 2");
                 else{
                     if(value == 1){
                         processRemoteMessagesRMI.requestServerList(observer);
