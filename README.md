@@ -22,7 +22,11 @@ Project developed for 'Distributed Programming', a third year subject @ISEC
 
 * Libraries needed: JBDC and JavaFX
 1. Clone project and create dabase using db_schema.sql
-
+2. Start GRDS fisrt, then Server (1 or more), and only then Clients (1 or more)
+* GRDS arguments - Port that accepts connections
+* Server arguments - IP and Port of GRDS
+* Client arguments - IP and Port of GRDS
+* You also need to change the database connection string of Server (String dbUrl)
 
 ## Communications Schema:
 
