@@ -20,7 +20,8 @@ Project developed for 'Distributed Programming', a third year subject @ISEC
 
 ## Manual:
 
-
+* Libraries needed: JBDC and JavaFX
+1. Clone project and create dabase using db_schema.sql
 
 
 ## Communications Schema:
