@@ -18,8 +18,8 @@ Project developed for 'Distributed Programming', a third year subject @ISEC
 * Delete messages
 * Asynchronous (and automatic) update of the information viewed by users
 
-
 ## Manual:
+
 
 
 
