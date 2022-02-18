@@ -28,6 +28,6 @@ Project developed for 'Distributed Programming', a third year subject @ISEC
 * Client arguments - IP and Port of GRDS
 * You also need to change the database connection string of Server (String dbUrl)
 
-## Communications Schema:
+## Communications Diagram:
 
 ![Communications Schema](https://i.imgur.com/cAmQVIQ.png)
